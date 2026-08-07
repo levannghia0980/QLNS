@@ -148,35 +148,5 @@ def init_db_defaults():
             else:
                 p.status = "open"
         db.commit()
-
-        # 5. Seed detailed schedule shifts for Month 8/2026 if not already present
-        p8 = db.query(SchedulePeriod).filter(
-            SchedulePeriod.month == 8,
-            SchedulePeriod.year == 2026
-        ).first()
-
-        intern_users = db.query(User).filter(User.user_type == "intern").all()
-        shift_options = ["S", "C", "SC", "S", "SC", "C"]
-
-        for u_idx, u in enumerate(intern_users):
-            for day in range(1, 32):
-                w_date = date(2026, 8, day)
-                if w_date.weekday() == 6:  # Skip Sunday
-                    continue
-                existing_s = db.query(Schedule).filter(
-                    Schedule.user_id == u.id,
-                    Schedule.work_day == w_date
-                ).first()
-                if not existing_s:
-                    shift_choice = shift_options[(u_idx + day) % len(shift_options)]
-                    s = Schedule(
-                        period_id=p8.id,
-                        user_id=u.id,
-                        work_day=w_date,
-                        shift=shift_choice
-                    )
-                    db.add(s)
-
-        db.commit()
     finally:
         db.close()

@@ -946,6 +946,10 @@ class GoogleSheetsService:
             db.commit()
             db.refresh(period)
 
+        # Xóa các ca trực cũ của kỳ này trước khi nạp từ Google Sheet để đảm bảo dữ liệu thật 100%, không bị lẫn dữ liệu ảo cũ
+        db.query(models.Schedule).filter(models.Schedule.period_id == period.id).delete()
+        db.commit()
+
         data_rows = rows[header_idx + 1:]
         count = 0
 
@@ -982,6 +986,9 @@ class GoogleSheetsService:
                 )
                 db.add(user)
                 db.flush()
+            else:
+                if full_name:
+                    user.full_name = full_name
 
             for col_i, day_num in day_cols.items():
                 if col_i >= len(r):
