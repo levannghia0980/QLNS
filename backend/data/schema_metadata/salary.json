@@ -1,0 +1,48 @@
+{
+  "table": "salary",
+  "description": "Bảng lương theo tháng",
+  "columns": [
+    {
+      "name": "id",
+      "type": "integer",
+      "sample": 1,
+      "note": "PK, auto-increment"
+    },
+    {
+      "name": "employee_id",
+      "type": "integer",
+      "sample": 5,
+      "note": "FK → employees.id"
+    },
+    {
+      "name": "month",
+      "type": "date",
+      "sample": "2026-07-01",
+      "note": "Tháng lương, format YYYY-MM-DD (ngày 01 của tháng)"
+    },
+    {
+      "name": "base_salary",
+      "type": "numeric(12,2)",
+      "sample": 15000000.00,
+      "note": "Lương cơ bản (VND)"
+    },
+    {
+      "name": "bonus",
+      "type": "numeric(12,2)",
+      "sample": 2000000.00,
+      "note": "Tiền thưởng (VND), default 0"
+    },
+    {
+      "name": "deduction",
+      "type": "numeric(12,2)",
+      "sample": 500000.00,
+      "note": "Khấu trừ (VND), default 0"
+    },
+    {
+      "name": "total",
+      "type": "numeric(12,2)",
+      "sample": 16500000.00,
+      "note": "Tổng lương thực nhận = base_salary + bonus - deduction"
+    }
+  ]
+}

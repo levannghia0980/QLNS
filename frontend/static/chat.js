@@ -1,5 +1,5 @@
 /* =============================================
-   CHAT ASSISTANT — Per-User History via localStorage
+   CHAT ASSISTANT — HrAi Per-User History via localStorage
    ============================================= */
 
 (function () {
@@ -18,8 +18,8 @@
       chatInput.focus();
     }
   }
-  toggleBtn.addEventListener('click', toggleChat);
-  closeBtn.addEventListener('click', toggleChat);
+  if (toggleBtn) toggleBtn.addEventListener('click', toggleChat);
+  if (closeBtn) closeBtn.addEventListener('click', toggleChat);
 
   // ── Per-user storage key ──
   function storageKey() {
@@ -48,98 +48,121 @@
     msgDiv.className = `chat-message ${msg.type}`;
     if (animate) msgDiv.style.animation = 'fadeIn 0.3s ease';
 
-    let sourceHtml = '';
-    if (msg.sources && msg.sources.length > 0) {
-      sourceHtml = `<div class="chat-sources mt-2"><small class="text-muted"><i class="bi bi-file-text me-1"></i>Nguồn:</small><ul>`;
-      msg.sources.forEach(s => {
-        sourceHtml += `<li><small>${s.title} (Trang ${s.page || 'N/A'})</small></li>`;
-      });
-      sourceHtml += `</ul></div>`;
+    let sqlHtml = '';
+    if (msg.sql) {
+      sqlHtml = `
+        <div class="chat-sql-block mt-2 p-2 bg-dark text-light rounded small">
+          <div class="d-flex justify-content-between align-items-center mb-1 text-muted">
+            <span><i class="bi bi-code-slash me-1"></i>Truy vấn SQL thực thi:</span>
+          </div>
+          <code>${msg.sql}</code>
+        </div>`;
+    }
+
+    let dataHtml = '';
+    if (msg.data && Array.isArray(msg.data) && msg.data.length > 0) {
+      const cols = Object.keys(msg.data[0]);
+      dataHtml = `
+        <div class="chat-table-block mt-2 table-responsive border rounded bg-white text-dark">
+          <table class="table table-sm table-striped mb-0 align-middle style="font-size: 0.8rem;">
+            <thead class="table-danger">
+              <tr>${cols.map(c => `<th>${c}</th>`).join('')}</tr>
+            </thead>
+            <tbody>
+              ${msg.data.slice(0, 10).map(r => `<tr>${cols.map(c => `<td>${r[c] != null ? r[c] : '—'}</td>`).join('')}</tr>`).join('')}
+            </tbody>
+          </table>
+          ${msg.data.length > 10 ? `<div class="p-1 text-muted text-center small">Hiển thị 10 / ${msg.data.length} kết quả</div>` : ''}
+        </div>`;
+    }
+
+    let metaHtml = '';
+    if (msg.metadata && msg.metadata.execution_time_seconds) {
+      metaHtml = `<div class="mt-1 text-end"><small class="text-muted" style="font-size:10px"><i class="bi bi-clock me-1"></i>${msg.metadata.execution_time_seconds}s</small></div>`;
     }
 
     const formatted = (msg.content || '').replace(/\n/g, '<br>');
-    msgDiv.innerHTML = `<div class="message-content">${formatted}${sourceHtml}</div>`;
+    msgDiv.innerHTML = `<div class="message-content">${formatted}${sqlHtml}${dataHtml}${metaHtml}</div>`;
     chatBody.appendChild(msgDiv);
     chatBody.scrollTop = chatBody.scrollHeight;
   }
 
   // ── Init: load history for current user ──
   window.initChat = function () {
-    // Show the widget
+    if (!chatWidget) return;
     chatWidget.classList.remove('d-none');
 
-    // Clear previous user's messages from DOM (keep the welcome bubble)
     chatBody.innerHTML = `
       <div class="chat-message ai-message">
-        <div class="message-content">Xin chào <strong>${STATE.fullName || ''}</strong>! Tôi có thể giúp gì cho bạn?</div>
+        <div class="message-content">Xin chào <strong>${STATE.fullName || ''}</strong>! Tôi là trợ lý AI HR (HrAi). Bạn muốn tra cứu hay hỏi gì về nhân sự?</div>
       </div>`;
 
-    // Load this user's saved messages
     const history = loadHistory();
     history.forEach(msg => renderBubble(msg));
   };
 
   // ── Destroy: hide widget & close window on logout ──
   window.destroyChat = function () {
-    chatWidget.classList.add('d-none');
-    chatWindow.classList.add('d-none');
+    if (chatWidget) chatWidget.classList.add('d-none');
+    if (chatWindow) chatWindow.classList.add('d-none');
   };
 
   // ── Send message ──
-  chatForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const text = chatInput.value.trim();
-    if (!text) return;
+  if (chatForm) {
+    chatForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const text = chatInput.value.trim();
+      if (!text) return;
 
-    const userMsg = { type: 'user-message', content: text };
-    renderBubble(userMsg, true);
-    chatInput.value = '';
-    chatInput.disabled = true;
+      const userMsg = { type: 'user-message', content: text };
+      renderBubble(userMsg, true);
+      chatInput.value = '';
+      chatInput.disabled = true;
 
-    // Loading indicator
-    const loadingDiv = document.createElement('div');
-    loadingDiv.className = 'chat-message ai-message typing-indicator';
-    loadingDiv.innerHTML = `<div class="message-content">
-      <span class="spinner-grow spinner-grow-sm text-primary"></span>
-      <span class="spinner-grow spinner-grow-sm text-primary ms-1"></span>
-      <span class="spinner-grow spinner-grow-sm text-primary ms-1"></span>
-    </div>`;
-    chatBody.appendChild(loadingDiv);
-    chatBody.scrollTop = chatBody.scrollHeight;
+      const loadingDiv = document.createElement('div');
+      loadingDiv.className = 'chat-message ai-message typing-indicator';
+      loadingDiv.innerHTML = `<div class="message-content">
+        <span class="spinner-grow spinner-grow-sm text-danger"></span>
+        <span class="spinner-grow spinner-grow-sm text-danger ms-1"></span>
+        <span class="spinner-grow spinner-grow-sm text-danger ms-1"></span>
+      </div>`;
+      chatBody.appendChild(loadingDiv);
+      chatBody.scrollTop = chatBody.scrollHeight;
 
-    try {
-      const res = await fetch(API + '/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + STATE.token
-        },
-        body: JSON.stringify({ message: text })
-      });
-      const data = await res.json();
-      chatBody.removeChild(loadingDiv);
+      try {
+        const res = await fetch(API + '/api/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + STATE.token
+          },
+          body: JSON.stringify({ question: text, message: text })
+        });
+        const data = await res.json();
+        chatBody.removeChild(loadingDiv);
 
-      const aiMsg = {
-        type: 'ai-message',
-        content: res.ok ? data.answer : 'Có lỗi xảy ra: ' + (data.detail || 'Lỗi server'),
-        sources: res.ok ? data.sources : []
-      };
-      renderBubble(aiMsg, true);
+        const aiMsg = {
+          type: 'ai-message',
+          content: res.ok ? (data.text || data.answer || 'Hoàn tất.') : ('Có lỗi xảy ra: ' + (data.detail || 'Lỗi server')),
+          sql: res.ok ? data.sql : null,
+          data: res.ok ? data.data : null,
+          metadata: res.ok ? data.metadata : null
+        };
+        renderBubble(aiMsg, true);
 
-      // Save both messages to this user's history
-      const history = loadHistory();
-      history.push(userMsg, aiMsg);
-      // Keep last 100 messages to avoid localStorage bloat
-      if (history.length > 100) history.splice(0, history.length - 100);
-      saveHistory(history);
+        const history = loadHistory();
+        history.push(userMsg, aiMsg);
+        if (history.length > 100) history.splice(0, history.length - 100);
+        saveHistory(history);
 
-    } catch (err) {
-      chatBody.removeChild(loadingDiv);
-      const errMsg = { type: 'ai-message', content: 'Không thể kết nối đến máy chủ.' };
-      renderBubble(errMsg, true);
-    } finally {
-      chatInput.disabled = false;
-      chatInput.focus();
-    }
-  });
+      } catch (err) {
+        if (loadingDiv.parentNode) chatBody.removeChild(loadingDiv);
+        const errMsg = { type: 'ai-message', content: 'Không thể kết nối đến máy chủ AI.' };
+        renderBubble(errMsg, true);
+      } finally {
+        chatInput.disabled = false;
+        chatInput.focus();
+      }
+    });
+  }
 })();

@@ -81,7 +81,11 @@ const PAGE_TITLES = {
   'documents': 'Quản lý tài liệu',
   'ai-config': 'Cấu hình AI',
   'register-ot': 'Chấm công OT',
-  'manage-ot': 'Quản lý OT',
+  'hrai-chat': 'Trợ lý AI & Xuất Excel',
+  'hrai-sheets': 'Quản lý Link Google Sheet & Excel',
+  'hrai-sheet-data': 'Dữ liệu Google Sheet & Excel',
+  'hrai-db': 'Cơ sở dữ liệu Hệ thống AI HR',
+  'hrai-settings': 'Cấu hình HrAi Gemini',
 };
 
 function navigate(page) {

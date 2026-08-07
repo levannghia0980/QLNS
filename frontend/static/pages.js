@@ -62,10 +62,13 @@ async function renderPage(page, area) {
       case 'register-schedule': await renderRegisterSchedule(area); break;
       case 'view-schedule': await renderViewSchedule(area); break;
       case 'change-password': renderChangePassword(area); break;
-      case 'documents': await renderDocuments(area); break;
-      case 'ai-config': await renderAIConfig(area); break;
       case 'register-ot': await renderRegisterOT(area); break;
       case 'manage-ot': await renderManageOT(area); break;
+      case 'hrai-chat': await renderHraiChatPage(area); break;
+      case 'hrai-sheets': await renderHraiSheets(area); break;
+      case 'hrai-sheet-data': await renderHraiSheetDataPage(area); break;
+      case 'hrai-db': await renderHraiDbPage(area); break;
+      case 'hrai-settings': await renderHraiSettings(area); break;
       default: area.innerHTML = '<div class="empty-state"><i class="bi bi-compass"></i><p>Trang không tồn tại</p></div>';
     }
   } catch (err) {

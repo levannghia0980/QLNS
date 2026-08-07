@@ -315,57 +315,8 @@ class AdminAccountRow(BaseModel):
         from_attributes = True
 
 
-# ─── Documents & AI ──────────────────────────────────────────────────────────
-class DocumentResponse(BaseModel):
-    id: int
-    title: str
-    filename: str
-    status: str
-    is_active: bool
-    uploaded_by: Optional[str] = None
-    created_at: Optional[datetime] = None
-
-    class Config:
-        from_attributes = True
-
-class AIConfigUpdate(BaseModel):
-    provider: Optional[str] = None
-    api_key: Optional[str] = None
-    chat_model: Optional[str] = None
-    embedding_model: Optional[str] = None
-    top_k: Optional[int] = None
-    chunk_size: Optional[int] = None
-    overlap: Optional[int] = None
-    temperature: Optional[float] = None
-
-class AIConfigResponse(BaseModel):
-    id: int
-    provider: str
-    api_key: Optional[str] = None
-    chat_model: str
-    embedding_model: str
-    top_k: int
-    chunk_size: int
-    overlap: int
-    temperature: float
-
-    class Config:
-        from_attributes = True
-
-class ChatRequest(BaseModel):
-    message: str
-
-class ChatSource(BaseModel):
-    document_id: str
-    title: str
-    page: Optional[int] = None
-
-class ChatResponse(BaseModel):
-    answer: str
-    sources: List[ChatSource]
-
-
 # ─── Overtime ─────────────────────────────────────────────────────────────────
+
 
 class OvertimeCreate(BaseModel):
     work_date: date
@@ -444,3 +395,49 @@ class OvertimeSummaryRow(BaseModel):
     total_by_factor: dict  # {"1.5": hours, "2.0": hours, ...}
     total_raw: float
     total_weighted: float
+
+
+# ─── HrAi Schemas ─────────────────────────────────────────────────────────────
+class ChatRequest(BaseModel):
+    """Request body cho POST /api/hrai/chat."""
+    question: str
+    session_id: Optional[str] = None
+
+
+class ChatResponse(BaseModel):
+    """Response body — luôn chứa text + display type + data thật."""
+    text: str
+    display: str = "text"  # card | table | bar_chart | line_chart | list | text
+    data: Optional[List[dict]] = None
+    sql: Optional[str] = None
+    metadata: dict = {}
+
+
+class RunSQLRequest(BaseModel):
+    """Request body cho POST /api/hrai/chat/run_sql."""
+    sql: str
+
+
+class ExportExcelRequest(BaseModel):
+    """Request body cho POST /api/chat/export-excel."""
+    title: Optional[str] = "Báo cáo HrAi"
+    sql: Optional[str] = None
+    data: Optional[List[dict]] = None
+
+
+class PreprocessedInput(BaseModel):
+    original: str
+    normalized_text: str
+    resolved_time: Optional[dict] = None
+    resolved_numbers: Optional[dict] = None
+    resolved_entities: Optional[dict] = None
+
+
+class LLMResponse(BaseModel):
+    question_type: str
+    sql: str
+    explanation: str
+    display: str = "table"
+    special_table: Optional[str] = None
+    special_columns: Optional[List[str]] = None
+

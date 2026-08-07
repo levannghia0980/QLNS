@@ -111,20 +111,38 @@ app.add_middleware(
 
 # Routers
 from routers import auth_router, user_router, admin_router, schedule_router
-from routers import employee_router, documents_router, ai_config_router, chat_router, overtime_router
+from routers import employee_router, overtime_router, hrai_router, google_router
 app.include_router(auth_router.router)
 app.include_router(user_router.router)
 app.include_router(admin_router.router)
 app.include_router(schedule_router.router)
 app.include_router(employee_router.router)
-app.include_router(documents_router.router)
-app.include_router(ai_config_router.router)
-app.include_router(chat_router.router)
 app.include_router(overtime_router.router)
+app.include_router(hrai_router.router)
+app.include_router(hrai_router.router, prefix="/api")
+app.include_router(google_router.router)
 
-# Serve frontend
+
+# Serve frontend (React App)
 frontend_dir = os.path.join(os.path.dirname(__file__), "..", "frontend")
-if os.path.exists(frontend_dir):
+dist_dir = os.path.join(frontend_dir, "dist")
+
+if os.path.exists(dist_dir):
+    app.mount("/assets", StaticFiles(directory=os.path.join(dist_dir, "assets")), name="assets")
+    if os.path.exists(os.path.join(frontend_dir, "static")):
+        app.mount("/static", StaticFiles(directory=os.path.join(frontend_dir, "static")), name="static")
+
+    @app.get("/")
+    def serve_index():
+        return FileResponse(os.path.join(dist_dir, "index.html"))
+
+    @app.get("/{path:path}")
+    def serve_spa(path: str):
+        fp = os.path.join(dist_dir, path)
+        if os.path.exists(fp):
+            return FileResponse(fp)
+        return FileResponse(os.path.join(dist_dir, "index.html"))
+elif os.path.exists(frontend_dir):
     app.mount("/static", StaticFiles(directory=os.path.join(frontend_dir, "static")), name="static")
 
     @app.get("/")
@@ -140,4 +158,6 @@ if os.path.exists(frontend_dir):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    reload_mode = os.getenv("RELOAD", "false").lower() == "true"
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=reload_mode)
+

@@ -1,0 +1,39 @@
+{
+  "table": "employees",
+  "description": "Bảng thông tin nhân viên",
+  "columns": [
+    {
+      "name": "id",
+      "type": "integer",
+      "sample": 1,
+      "note": "PK, auto-increment"
+    },
+    {
+      "name": "full_name",
+      "type": "varchar(100)",
+      "sample": "Nguyễn Văn A",
+      "note": "Họ tên đầy đủ"
+    },
+    {
+      "name": "role",
+      "type": "varchar(50)",
+      "enum_values": ["AI", "Backend", "Frontend", "QA", "PM", "HR", "Intern", "Designer", "DevOps", "Data"]
+    },
+    {
+      "name": "department",
+      "type": "varchar(50)",
+      "enum_values": ["Engineering", "HR", "Sales", "Marketing", "Finance", "Operations"]
+    },
+    {
+      "name": "join_date",
+      "type": "date",
+      "sample": "2024-01-15",
+      "note": "Ngày vào công ty, format YYYY-MM-DD"
+    },
+    {
+      "name": "status",
+      "type": "varchar(20)",
+      "enum_values": ["active", "inactive", "intern", "resigned"]
+    }
+  ]
+}

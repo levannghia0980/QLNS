@@ -1,0 +1,123 @@
+# ═══════════════════════════════════════════════════════════════
+# Business Ontology — AI HR Agent v2
+# Cache tĩnh, refresh khi đổi rule nghiệp vụ
+# ═══════════════════════════════════════════════════════════════
+
+# ─── Đồng nghĩa (synonym mapping) ────────────────────────────
+synonyms:
+  # KPI / Chấm công
+  đủ_KPI:
+    - "đủ giờ"
+    - "đủ công"
+    - "hoàn thành KPI"
+    - "đạt KPI"
+    - "full attendance"
+  thiếu_giờ:
+    - "chưa đủ giờ"
+    - "thiếu công"
+    - "chưa đạt KPI"
+    - "not enough hours"
+  nghỉ_phép:
+    - "nghỉ phép"
+    - "off"
+    - "day off"
+    - "leave"
+    - "ngày nghỉ"
+  đi_muộn:
+    - "đi trễ"
+    - "late"
+    - "check in muộn"
+    - "vào muộn"
+  về_sớm:
+    - "ra sớm"
+    - "early leave"
+    - "check out sớm"
+  tăng_ca:
+    - "overtime"
+    - "OT"
+    - "làm thêm"
+    - "làm ngoài giờ"
+
+  # Lương
+  lương:
+    - "salary"
+    - "thu nhập"
+    - "income"
+    - "tiền lương"
+  thưởng:
+    - "bonus"
+    - "tiền thưởng"
+    - "khen thưởng"
+  khấu_trừ:
+    - "deduction"
+    - "trừ lương"
+    - "phạt"
+
+  # Nhân sự
+  nhân_viên:
+    - "employee"
+    - "staff"
+    - "người lao động"
+    - "NV"
+  thực_tập:
+    - "intern"
+    - "thực tập sinh"
+    - "TTS"
+  giờ_làm:
+    - "working hours"
+    - "số giờ"
+    - "giờ công"
+    - "thời gian làm việc"
+
+# ─── Công thức quy đổi ────────────────────────────────────────
+formulas:
+  ca_to_hours: "1 ca = 4 giờ"
+  full_month_hours: "đủ giờ tháng = >= 100 giờ/tháng"
+  full_day_hours: "đủ giờ ngày = >= 8 giờ/ngày"
+  ot_rate: "tăng ca = 1.5x lương cơ bản/giờ"
+
+# ─── Rule nghiệp vụ ───────────────────────────────────────────
+rules:
+  intern_minimum_period: "thực tập sinh cần tối thiểu 3 tháng"
+  max_leave_per_month: "nghỉ phép tối đa 2 ngày/tháng (không tính phép năm)"
+  late_threshold: "đi muộn = check_in sau 08:30"
+  early_leave_threshold: "về sớm = check_out trước 17:00"
+
+# ─── Entity cố định ───────────────────────────────────────────
+entities:
+  roles:
+    - "AI"
+    - "Backend"
+    - "Frontend"
+    - "QA"
+    - "PM"
+    - "HR"
+    - "Intern"
+    - "Designer"
+    - "DevOps"
+    - "Data"
+  departments:
+    - "Engineering"
+    - "HR"
+    - "Sales"
+    - "Marketing"
+    - "Finance"
+    - "Operations"
+  projects:
+    - "Project Alpha"
+    - "Project Beta"
+    - "Project Gamma"
+  statuses:
+    - "active"
+    - "inactive"
+    - "intern"
+    - "resigned"
+
+# ─── Metric mapping (metric → cột DB thật) ────────────────────
+metric_mapping:
+  giờ_làm: "working_hours"
+  số_ca: "shift_count"
+  lương_cơ_bản: "base_salary"
+  thưởng: "bonus"
+  khấu_trừ: "deduction"
+  tổng_lương: "total"

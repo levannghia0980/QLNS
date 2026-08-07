@@ -1,0 +1,53 @@
+{
+  "table": "attendance",
+  "description": "Bảng chấm công hàng ngày",
+  "columns": [
+    {
+      "name": "id",
+      "type": "integer",
+      "sample": 1,
+      "note": "PK, auto-increment"
+    },
+    {
+      "name": "employee_id",
+      "type": "integer",
+      "sample": 5,
+      "note": "FK → employees.id"
+    },
+    {
+      "name": "date",
+      "type": "date",
+      "sample": "2026-07-15",
+      "note": "Ngày chấm công, format YYYY-MM-DD"
+    },
+    {
+      "name": "check_in",
+      "type": "time",
+      "sample": "08:00:00",
+      "note": "Giờ vào, format HH:MM:SS"
+    },
+    {
+      "name": "check_out",
+      "type": "time",
+      "sample": "17:30:00",
+      "note": "Giờ ra, format HH:MM:SS"
+    },
+    {
+      "name": "working_hours",
+      "type": "numeric(4,2)",
+      "sample": 8.5,
+      "note": "Tổng giờ làm thực tế trong ngày"
+    },
+    {
+      "name": "shift_count",
+      "type": "numeric(3,1)",
+      "sample": 2.0,
+      "note": "Số ca (1 ca = 4 giờ)"
+    },
+    {
+      "name": "status",
+      "type": "varchar(20)",
+      "enum_values": ["present", "absent", "leave", "late", "early_leave", "holiday"]
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Date, DateTime, ForeignKey, Text, Boolean, Float, Time
+from sqlalchemy import Column, Integer, String, Date, DateTime, ForeignKey, Text, Boolean, Float, Time, JSON
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from database import Base
@@ -102,32 +102,6 @@ class Schedule(Base):
     user = relationship("User", back_populates="schedules")
 
 
-class Document(Base):
-    __tablename__ = "documents"
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    title = Column(String, nullable=False)
-    filename = Column(String, nullable=False)
-    status = Column(String, default="PROCESSING")  # PROCESSING / READY / ERROR
-    is_active = Column(Boolean, default=True)
-    uploaded_by = Column(String, nullable=True)
-    created_at = Column(DateTime, default=func.now())
-
-
-class AIConfig(Base):
-    __tablename__ = "ai_config"
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    provider = Column(String, default="Google Gemini")
-    api_key = Column(String, nullable=True)
-    chat_model = Column(String, default="gemini-2.5-flash")
-    embedding_model = Column(String, default="text-embedding-004")
-    top_k = Column(Integer, default=5)
-    chunk_size = Column(Integer, default=1000)
-    overlap = Column(Integer, default=150)
-    temperature = Column(Float, default=0.2)
-
-
 class OvertimeRequest(Base):
     """Bảng đăng ký OT của nhân sự Onsite"""
     __tablename__ = "overtime_requests"
@@ -151,3 +125,5 @@ class OvertimeRequest(Base):
 
     user = relationship("User", back_populates="overtime_requests", foreign_keys=[user_id])
     approver = relationship("User", foreign_keys=[approved_by])
+
+
