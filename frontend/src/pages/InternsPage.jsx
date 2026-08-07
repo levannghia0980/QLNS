@@ -456,7 +456,7 @@ export default function InternsPage() {
                 <th>DỰ ÁN</th>
                 <th style={{ textAlign: 'center' }}>THỜI GIAN TT</th>
                 <th style={{ textAlign: 'center' }}>PHỤ CẤP</th>
-                <th style={{ textAlign: 'center' }}>STATUS</th>
+                <th style={{ textAlign: 'center' }}>TRẠNG THÁI</th>
                 <th style={{ textAlign: 'center', width: 90 }}>THAO TÁC</th>
               </tr>
             </thead>
@@ -491,8 +491,13 @@ export default function InternsPage() {
                     </span>
                   </td>
                   <td style={{ textAlign: 'center' }}>
-                    <span className={`vt-badge ${intern.working_status === 'Working' ? 'vt-badge-success' : 'vt-badge-danger'}`}>
-                      {intern.working_status || 'Working'}
+                    <span className={`vt-badge ${
+                      intern.employee_type === 'Đã nghỉ' ? 'vt-badge-danger' : 
+                      intern.employee_type === 'Người mượn' ? 'vt-badge-warning' : 
+                      intern.employee_type === 'Tạm nghỉ' ? 'vt-badge-secondary' : 
+                      'vt-badge-success'
+                    }`}>
+                      {intern.employee_type || 'Của công ty'}
                     </span>
                   </td>
                   <td style={{ textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
@@ -593,8 +598,13 @@ export default function InternsPage() {
               <div style={{ background: '#F8FAFC', padding: 14, borderRadius: 10, border: '1px solid #E2E8F0' }}>
                 <span style={{ fontSize: '0.72rem', color: '#64748B', display: 'block', fontWeight: 600 }}>Trạng Thái / Loại TTS</span>
                 <div style={{ marginTop: 4 }}>
-                  <span className={`vt-badge ${selectedIntern.employee_type === 'Người mượn' ? 'vt-badge-warning' : 'vt-badge-success'}`} style={{ fontSize: '0.8rem', padding: '3px 8px' }}>
-                    {selectedIntern.employee_type || selectedIntern.working_status || 'Của công ty'}
+                  <span className={`vt-badge ${
+                    selectedIntern.employee_type === 'Đã nghỉ' ? 'vt-badge-danger' : 
+                    selectedIntern.employee_type === 'Người mượn' ? 'vt-badge-warning' : 
+                    selectedIntern.employee_type === 'Tạm nghỉ' ? 'vt-badge-secondary' : 
+                    'vt-badge-success'
+                  }`} style={{ fontSize: '0.82rem', padding: '3px 10px' }}>
+                    {selectedIntern.employee_type || 'Của công ty'}
                   </span>
                 </div>
               </div>
@@ -740,8 +750,13 @@ export default function InternsPage() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
                 <div>
-                  <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#0F172A', marginBottom: 4, display: 'block' }}>Loại TTS</label>
-                  <select className="vt-search-input" style={{ width: '100%' }} value={formData.employee_type} onChange={e => setFormData({ ...formData, employee_type: e.target.value })}>
+                  <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#0F172A', marginBottom: 4, display: 'block' }}>Trạng Thái / Loại TTS</label>
+                  <select 
+                    className="vt-search-input" 
+                    style={{ width: '100%' }} 
+                    value={formData.employee_type} 
+                    onChange={e => setFormData({ ...formData, employee_type: e.target.value, working_status: e.target.value === 'Đã nghỉ' ? 'Resigned' : 'Working' })}
+                  >
                     <option value="Của công ty">Của công ty</option>
                     <option value="Người mượn">Người mượn</option>
                     <option value="Tạm nghỉ">Tạm nghỉ</option>

@@ -37,11 +37,11 @@ def get_dashboard_stats(
         emp_trung_tam = total_employees
         
     borrowed_count = sum(1 for i in interns if i.employee_type == "Người mượn")
-    intern_count = total_interns - borrowed_count
+    intern_count = sum(1 for i in interns if i.employee_type != "Người mượn" and i.employee_type != "Đã nghỉ")
     
-    # Working status: 16 working, 0 resigned
-    working = sum(1 for i in interns if (i.working_status or "Working") == "Working")
-    resigned = sum(1 for i in interns if (i.working_status or "Working") == "Resigned")
+    # Resigned is only for interns with status "Đã nghỉ" / "Resigned", all others are working
+    resigned = sum(1 for i in interns if (i.employee_type == "Đã nghỉ" or i.working_status == "Resigned" or i.working_status == "Đã nghỉ"))
+    working = total_interns - resigned
     
     from datetime import date
     today = date.today()
