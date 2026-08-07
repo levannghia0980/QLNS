@@ -214,6 +214,10 @@ export default function SchedulePage() {
   const pad2 = (n) => String(n).padStart(2, '0');
 
   const getRowShift = (row, day) => {
+    if (row.days) {
+      if (row.days[day] !== undefined) return row.days[day] || '';
+      if (row.days[String(day)] !== undefined) return row.days[String(day)] || '';
+    }
     const dateStr = `${year}-${pad2(month)}-${pad2(day)}`;
     const match = (row.schedules || []).find(s => s.work_day === dateStr);
     return match ? match.shift : '';
@@ -221,6 +225,13 @@ export default function SchedulePage() {
 
   const getRowTotalShifts = (row) => {
     let total = 0;
+    if (row.days && typeof row.days === 'object') {
+      Object.values(row.days).forEach(shift => {
+        if (shift === 'SC') total += 1;
+        else if (shift === 'S' || shift === 'C') total += 0.5;
+      });
+      return total;
+    }
     (row.schedules || []).forEach(s => {
       if (s.shift === 'SC') total += 1;
       else if (s.shift === 'S' || s.shift === 'C') total += 0.5;

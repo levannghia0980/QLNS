@@ -895,34 +895,46 @@ class GoogleSheetsService:
 
         header_idx = -1
         day_cols = {}
-        code_col = 0
-        name_col = 1
+        code_col = -1
+        name_col = -1
 
-        for r_i, r in enumerate(rows[:5]):
+        for r_i, r in enumerate(rows[:6]):
             if not r:
                 continue
             found_days = {}
             for c_i, val in enumerate(r):
+                if val is None:
+                    continue
                 val_str = str(val).strip()
                 val_lower = val_str.lower()
-                if "mã" in val_lower or "code" in val_lower:
+                if "mã" in val_lower or "code" in val_lower or "mnv" in val_lower:
                     code_col = c_i
                 if "tên" in val_lower or "name" in val_lower or "họ" in val_lower:
                     name_col = c_i
-                match = re.match(r'^(\d{1,2})', val_str)
+                
+                # Check for day header e.g. "1\nT7", "01\nThứ 7", "1", "2"
+                match = re.search(r'^\s*(\d{1,2})', val_str)
                 if match:
                     d_num = int(match.group(1))
                     if 1 <= d_num <= 31:
                         found_days[c_i] = d_num
-            if len(found_days) >= 5:
+
+            if len(found_days) >= 4:
                 header_idx = r_i
                 day_cols = found_days
                 break
 
         if header_idx == -1:
             header_idx = 1
-            for c_i in range(2, min(len(rows[0]), 35)):
-                day_cols[c_i] = c_i - 1
+            code_col = 0 if code_col == -1 else code_col
+            name_col = 1 if name_col == -1 else name_col
+            for c_i in range(2, min(len(rows[header_idx]), 35)):
+                d = c_i - 1
+                if 1 <= d <= 31:
+                    day_cols[c_i] = d
+        else:
+            if code_col == -1: code_col = 0
+            if name_col == -1: name_col = 1
 
         period = db.query(models.SchedulePeriod).filter(
             models.SchedulePeriod.month == month,
@@ -940,28 +952,48 @@ class GoogleSheetsService:
         for r in data_rows:
             if not r or len(r) <= max(code_col, name_col, 0):
                 continue
-            emp_code = str(r[code_col]).strip() if code_col < len(r) and r[code_col] else ""
-            full_name = str(r[name_col]).strip() if name_col < len(r) and r[name_col] else ""
+            emp_code = str(r[code_col]).strip() if code_col < len(r) and r[code_col] is not None else ""
+            full_name = str(r[name_col]).strip() if name_col < len(r) and r[name_col] is not None else ""
             if not emp_code and not full_name:
                 continue
-            if emp_code.lower().startswith("tổng") or full_name.lower().startswith("tổng"):
+            if emp_code.lower().startswith("tổng") or full_name.lower().startswith("tổng") or emp_code.lower() == "stt":
                 continue
 
             user = None
             if emp_code:
-                user = db.query(models.User).filter(models.User.employee_code == emp_code).first()
+                user = db.query(models.User).filter(
+                    models.User.employee_code.ilike(emp_code.strip())
+                ).first()
             if not user and full_name:
-                user = db.query(models.User).filter(models.User.full_name == full_name).first()
+                user = db.query(models.User).filter(
+                    models.User.full_name.ilike(full_name.strip())
+                ).first()
 
             if not user:
-                continue
+                # Nếu TTS chưa có trong DB thì tự động tạo mới vào bảng users!
+                user = models.User(
+                    employee_code=emp_code or f"TTS{len(db.query(models.User).filter(models.User.user_type == 'intern').all()) + 1}",
+                    full_name=full_name or emp_code,
+                    role="user",
+                    user_type="intern",
+                    position="TTS",
+                    working_status="Working",
+                    account_status=1
+                )
+                db.add(user)
+                db.flush()
 
             for col_i, day_num in day_cols.items():
                 if col_i >= len(r):
                     continue
-                shift_val = str(r[col_i]).strip().upper() if r[col_i] else ""
-                if shift_val not in ("S", "C", "SC"):
-                    shift_val = ""
+                raw_shift = str(r[col_i]).strip().upper() if r[col_i] is not None else ""
+                shift_val = ""
+                if "SC" in raw_shift:
+                    shift_val = "SC"
+                elif "S" in raw_shift:
+                    shift_val = "S"
+                elif "C" in raw_shift:
+                    shift_val = "C"
 
                 try:
                     w_date = date(year, month, day_num)
@@ -991,6 +1023,6 @@ class GoogleSheetsService:
                 count += 1
 
         db.commit()
-        return {"message": f"Đồng bộ thành công {count} ca trực từ Google Sheets!", "count": count}
+        return {"message": f"🎉 Đồng bộ thành công {count} ca trực từ Google Sheets vào CSDL!", "count": count}
 
 
