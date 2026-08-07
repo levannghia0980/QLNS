@@ -323,7 +323,7 @@ export default function InternsPage() {
   };
 
   return (
-    <div className="vt-page-container animate-fade-in">
+    <div className="vt-container animate-fade-in">
       {/* Status Notification Toast */}
       {statusMsg && (
         <div style={{ background: '#ECFDF5', color: '#047857', border: '1px solid #A7F3D0', padding: '10px 16px', borderRadius: 8, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8, fontWeight: 600 }}>
@@ -347,7 +347,7 @@ export default function InternsPage() {
       </div>
 
       {/* Internal Sub-Navigation Controls */}
-      <div className="vt-sub-nav" style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
+      <div className="vt-sub-nav-bar">
         <button 
           className={`vt-sub-nav-pill ${subTab === 'interns' ? 'active' : ''}`}
           onClick={() => setSubTab('interns')}
