@@ -537,65 +537,98 @@ export default function InternsPage() {
               <button onClick={() => setIsDetailOpen(false)} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white', cursor: 'pointer', borderRadius: 6, padding: 6, display: 'flex' }}><X size={18} /></button>
             </div>
 
-            {/* Modal Body: Complete A to Z details */}
-            <div style={{ padding: 24, overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
-              <div style={{ background: '#F8FAFC', padding: 12, borderRadius: 8, border: '1px solid #E2E8F0' }}>
-                <span style={{ fontSize: '0.75rem', color: '#64748B', display: 'block' }}>Họ và Tên</span>
-                <strong style={{ fontSize: '0.95rem', color: '#0F172A' }}>{selectedIntern.full_name || '—'}</strong>
+            {/* Modal Body: Complete A to Z details with polished cards */}
+            <div style={{ padding: 24, overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
+              {/* Box 1: Họ tên & Mã NV */}
+              <div style={{ background: '#F8FAFC', padding: 14, borderRadius: 10, border: '1px solid #E2E8F0' }}>
+                <span style={{ fontSize: '0.72rem', color: '#64748B', display: 'block', fontWeight: 600 }}>Họ và Tên & Mã TTS</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+                  <span style={{ background: '#FEE2E2', color: '#EE0033', padding: '2px 8px', borderRadius: 4, fontWeight: 700, fontSize: '0.8rem' }}>{selectedIntern.employee_code || 'TTS'}</span>
+                  <strong style={{ fontSize: '1rem', color: '#0F172A' }}>{selectedIntern.full_name || '—'}</strong>
+                </div>
               </div>
-              <div style={{ background: '#F8FAFC', padding: 12, borderRadius: 8, border: '1px solid #E2E8F0' }}>
-                <span style={{ fontSize: '0.75rem', color: '#64748B', display: 'block' }}>Vị trí / Role</span>
-                <span className="vt-badge vt-badge-primary">{selectedIntern.position || selectedIntern.role || 'Dev'}</span>
+
+              {/* Box 2: Vị trí / Role & Dự án */}
+              <div style={{ background: '#F8FAFC', padding: 14, borderRadius: 10, border: '1px solid #E2E8F0' }}>
+                <span style={{ fontSize: '0.72rem', color: '#64748B', display: 'block', fontWeight: 600 }}>Vị Trí / Role & Dự Án</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+                  <span className="vt-badge vt-badge-primary" style={{ fontSize: '0.8rem', padding: '3px 8px' }}>{selectedIntern.position || selectedIntern.role || 'Dev'}</span>
+                  <strong style={{ color: '#059669', fontSize: '0.95rem' }}>{selectedIntern.project || '—'}</strong>
+                </div>
               </div>
-              <div style={{ background: '#F8FAFC', padding: 12, borderRadius: 8, border: '1px solid #E2E8F0' }}>
-                <span style={{ fontSize: '0.75rem', color: '#64748B', display: 'block' }}>Dự án tham gia</span>
-                <strong style={{ color: '#059669' }}>{selectedIntern.project || '—'}</strong>
+
+              {/* Box 3: Ngày vào làm việc & Tổng thời gian TT */}
+              <div style={{ background: '#FFFBEB', padding: 14, borderRadius: 10, border: '1px solid #FDE68A' }}>
+                <span style={{ fontSize: '0.72rem', color: '#92400E', display: 'block', fontWeight: 600 }}>Ngày Vào Làm Việc</span>
+                <div style={{ marginTop: 4, fontWeight: 700, color: '#B45309', fontSize: '0.95rem' }}>
+                  {selectedIntern.join_date ? new Date(selectedIntern.join_date).toLocaleDateString('vi-VN') : '—'}
+                </div>
               </div>
-              <div style={{ background: '#F8FAFC', padding: 12, borderRadius: 8, border: '1px solid #E2E8F0' }}>
-                <span style={{ fontSize: '0.75rem', color: '#64748B', display: 'block' }}>Trạng thái / Loại TTS</span>
-                <span className={`vt-badge ${selectedIntern.employee_type === 'Người mượn' ? 'vt-badge-warning' : 'vt-badge-success'}`}>
-                  {selectedIntern.employee_type || selectedIntern.working_status || 'Của công ty'}
-                </span>
+
+              {/* Box 4: Tổng thời gian thực tập */}
+              <div style={{ background: '#ECFDF5', padding: 14, borderRadius: 10, border: '1px solid #A7F3D0' }}>
+                <span style={{ fontSize: '0.72rem', color: '#065F46', display: 'block', fontWeight: 600 }}>Tổng Thời Gian Thực Tập</span>
+                <div style={{ marginTop: 4, fontWeight: 800, color: '#047857', fontSize: '1rem' }}>
+                  {calcDuration(selectedIntern.join_date)}
+                </div>
               </div>
-              <div style={{ background: '#F8FAFC', padding: 12, borderRadius: 8, border: '1px solid #E2E8F0' }}>
-                <span style={{ fontSize: '0.75rem', color: '#64748B', display: 'block' }}>Giới tính & Dân tộc</span>
-                <strong>{selectedIntern.gender || 'Nam'} • {selectedIntern.ethnicity || 'Kinh'}</strong>
+
+              {/* Box 5: Trạng thái / Loại TTS */}
+              <div style={{ background: '#F8FAFC', padding: 14, borderRadius: 10, border: '1px solid #E2E8F0' }}>
+                <span style={{ fontSize: '0.72rem', color: '#64748B', display: 'block', fontWeight: 600 }}>Trạng Thái / Loại TTS</span>
+                <div style={{ marginTop: 4 }}>
+                  <span className={`vt-badge ${selectedIntern.employee_type === 'Người mượn' ? 'vt-badge-warning' : 'vt-badge-success'}`} style={{ fontSize: '0.8rem', padding: '3px 8px' }}>
+                    {selectedIntern.employee_type || selectedIntern.working_status || 'Của công ty'}
+                  </span>
+                </div>
               </div>
-              <div style={{ background: '#F8FAFC', padding: 12, borderRadius: 8, border: '1px solid #E2E8F0' }}>
-                <span style={{ fontSize: '0.75rem', color: '#64748B', display: 'block' }}>Ngày sinh</span>
-                <strong>{selectedIntern.birthday ? new Date(selectedIntern.birthday).toLocaleDateString('vi-VN') : '—'}</strong>
+
+              {/* Box 6: Phụ cấp */}
+              <div style={{ background: '#F8FAFC', padding: 14, borderRadius: 10, border: '1px solid #E2E8F0' }}>
+                <span style={{ fontSize: '0.72rem', color: '#64748B', display: 'block', fontWeight: 600 }}>Phụ Cấp</span>
+                <div style={{ marginTop: 4, fontWeight: 700, color: selectedIntern.allowance === 'Có' ? '#059669' : '#64748B', fontSize: '0.95rem' }}>
+                  {selectedIntern.allowance === 'Có' ? 'Có phụ cấp' : 'Không có phụ cấp'}
+                </div>
               </div>
-              <div style={{ background: '#F8FAFC', padding: 12, borderRadius: 8, border: '1px solid #E2E8F0' }}>
-                <span style={{ fontSize: '0.75rem', color: '#64748B', display: 'block' }}>Quê quán</span>
-                <strong>{selectedIntern.hometown || '—'}</strong>
+
+              {/* Box 7: Giới tính, Dân tộc, Ngày sinh */}
+              <div style={{ background: '#F8FAFC', padding: 14, borderRadius: 10, border: '1px solid #E2E8F0' }}>
+                <span style={{ fontSize: '0.72rem', color: '#64748B', display: 'block', fontWeight: 600 }}>Giới Tính, Dân Tộc & Ngày Sinh</span>
+                <div style={{ marginTop: 4, color: '#0F172A', fontWeight: 600, fontSize: '0.9rem' }}>
+                  {selectedIntern.gender || 'Nam'} • {selectedIntern.ethnicity || 'Kinh'} ({selectedIntern.birthday ? new Date(selectedIntern.birthday).toLocaleDateString('vi-VN') : '—'})
+                </div>
               </div>
-              <div style={{ background: '#F8FAFC', padding: 12, borderRadius: 8, border: '1px solid #E2E8F0' }}>
-                <span style={{ fontSize: '0.75rem', color: '#64748B', display: 'block' }}>Email Viettel</span>
-                <strong style={{ color: '#2563EB' }}>{selectedIntern.viettel_email || '—'}</strong>
+
+              {/* Box 8: Quê quán & Email Viettel */}
+              <div style={{ background: '#F8FAFC', padding: 14, borderRadius: 10, border: '1px solid #E2E8F0' }}>
+                <span style={{ fontSize: '0.72rem', color: '#64748B', display: 'block', fontWeight: 600 }}>Quê Quán & Email Viettel</span>
+                <div style={{ marginTop: 4, color: '#2563EB', fontWeight: 600, fontSize: '0.85rem' }}>
+                  {selectedIntern.hometown || '—'} {selectedIntern.viettel_email ? `• ${selectedIntern.viettel_email}` : ''}
+                </div>
               </div>
-              <div style={{ background: '#F8FAFC', padding: 12, borderRadius: 8, border: '1px solid #E2E8F0' }}>
-                <span style={{ fontSize: '0.75rem', color: '#64748B', display: 'block' }}>Số điện thoại (dùng Zalo)</span>
-                <strong style={{ fontFamily: 'monospace', color: '#0F172A' }}>{selectedIntern.phone || '—'}</strong>
+
+              {/* Box 9: SĐT & CCCD */}
+              <div style={{ background: '#F8FAFC', padding: 14, borderRadius: 10, border: '1px solid #E2E8F0' }}>
+                <span style={{ fontSize: '0.72rem', color: '#64748B', display: 'block', fontWeight: 600 }}>Số Điện Thoại & Số CCCD</span>
+                <div style={{ marginTop: 4, fontFamily: 'monospace', fontWeight: 700, color: '#0F172A', fontSize: '0.9rem' }}>
+                  SĐT: {selectedIntern.phone || '—'} • CCCD: {selectedIntern.cccd || '—'}
+                </div>
               </div>
-              <div style={{ background: '#F8FAFC', padding: 12, borderRadius: 8, border: '1px solid #E2E8F0' }}>
-                <span style={{ fontSize: '0.75rem', color: '#64748B', display: 'block' }}>Số CCCD / CMND</span>
-                <strong style={{ fontFamily: 'monospace', color: '#475569' }}>{selectedIntern.cccd || '—'}</strong>
+
+              {/* Box 10: Ngân hàng & STK */}
+              <div style={{ background: '#F8FAFC', padding: 14, borderRadius: 10, border: '1px solid #E2E8F0' }}>
+                <span style={{ fontSize: '0.72rem', color: '#64748B', display: 'block', fontWeight: 600 }}>Ngân Hàng / Số Tài Khoản</span>
+                <div style={{ marginTop: 4, fontWeight: 600, color: '#334155', fontSize: '0.9rem' }}>
+                  {selectedIntern.bank_account || '—'} {selectedIntern.bank_name ? `(${selectedIntern.bank_name})` : ''}
+                </div>
               </div>
-              <div style={{ background: '#F8FAFC', padding: 12, borderRadius: 8, border: '1px solid #E2E8F0', gridColumn: 'span 2' }}>
-                <span style={{ fontSize: '0.75rem', color: '#64748B', display: 'block' }}>Số tài khoản ngân hàng / Viettel Money</span>
-                <strong>{selectedIntern.bank_account || '—'} {selectedIntern.bank_name ? `(${selectedIntern.bank_name})` : ''}</strong>
-              </div>
-              <div style={{ background: '#F8FAFC', padding: 12, borderRadius: 8, border: '1px solid #E2E8F0' }}>
-                <span style={{ fontSize: '0.75rem', color: '#64748B', display: 'block' }}>Ngày vào làm việc</span>
-                <strong>{selectedIntern.join_date ? new Date(selectedIntern.join_date).toLocaleDateString('vi-VN') : '—'}</strong>
-              </div>
-              <div style={{ background: '#F8FAFC', padding: 12, borderRadius: 8, border: '1px solid #E2E8F0' }}>
-                <span style={{ fontSize: '0.75rem', color: '#64748B', display: 'block' }}>Tổng thời gian thực tập</span>
-                <strong style={{ color: '#D97706' }}>{calcDuration(selectedIntern.join_date)}</strong>
-              </div>
-              <div style={{ background: '#F8FAFC', padding: 12, borderRadius: 8, border: '1px solid #E2E8F0', gridColumn: 'span 2' }}>
-                <span style={{ fontSize: '0.75rem', color: '#64748B', display: 'block' }}>Ghi chú</span>
-                <strong style={{ color: '#334155', fontWeight: 500 }}>{selectedIntern.allowance || 'Không có ghi chú'}</strong>
+
+              {/* Box 11: Ghi chú */}
+              <div style={{ background: '#F8FAFC', padding: 14, borderRadius: 10, border: '1px solid #E2E8F0', gridColumn: 'span 2' }}>
+                <span style={{ fontSize: '0.72rem', color: '#64748B', display: 'block', fontWeight: 600 }}>Ghi Chú Phụ Trợ</span>
+                <div style={{ marginTop: 4, color: '#475569', fontSize: '0.88rem', fontStyle: selectedIntern.allowance ? 'normal' : 'italic' }}>
+                  {selectedIntern.allowance || 'Không có ghi chú thêm cho thực tập sinh này.'}
+                </div>
               </div>
             </div>
 
