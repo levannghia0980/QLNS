@@ -548,7 +548,7 @@ class GoogleSheetsService:
 
         cfg_data = GoogleSheetsService.get_credentials_info()
         saved_folder_id = cfg_data.get('drive_folder_id', None)
-        saved_sheet_url = cfg_data.get('drive_sheet_url', None)
+        saved_sheet_url = cfg_data.get('interns_sheet_url', None)
 
         effective_sheet_url = target_sheet_url or saved_sheet_url
 
@@ -588,6 +588,9 @@ class GoogleSheetsService:
                 sheet_id = file_res.get('id')
                 sheet_url = file_res.get('webViewLink')
 
+                cfg_data['interns_sheet_url'] = sheet_url
+                GoogleSheetsService.save_credentials_info(cfg_data)
+
                 try:
                     drive_service.permissions().create(
                         fileId=sheet_id,
@@ -605,25 +608,36 @@ class GoogleSheetsService:
             num_cols = len(headers)
             rows_data = []
 
-            # Title Row
+            # Row 1: Title
             rows_data.append(["DANH SÁCH THỰC TẬP SINH – VIETTEL SOFTWARE"] + [""] * (num_cols - 1))
+            # Row 2: Header
             rows_data.append(headers)
 
             for i in interns:
                 rows_data.append([
                     i.full_name or "",
                     i.employee_code or "",
-                    i.role or "",
-                    i.gender or "",
+                    i.role or "TTS",
+                    i.gender or "Nam",
                     i.viettel_email or "",
                     i.phone or "",
                     i.hometown or "",
                     i.bank_name or "",
                     i.bank_account or "",
-                    i.project or "",
+                    i.project or "—",
                     i.working_status or "Working"
                 ])
 
+            # 1. Xóa sạch dữ liệu cũ và các cột lịch/tổng cộng thừa từ trước trên toàn bộ Sheet
+            try:
+                sheets_service.spreadsheets().values().clear(
+                    spreadsheetId=sheet_id,
+                    range='A1:ZZ500'
+                ).execute()
+            except Exception:
+                pass
+
+            # 2. Ghi đúng 11 cột hồ sơ chi tiết
             sheets_service.spreadsheets().values().update(
                 spreadsheetId=sheet_id,
                 range='A1',
@@ -631,12 +645,15 @@ class GoogleSheetsService:
                 body={'values': rows_data}
             ).execute()
 
-            # Styling
+            # 3. Định dạng chuẩn giao diện Viettel cho 11 cột hồ sơ
             requests = [
-                {"unmergeCells": {"range": {"sheetId": 0, "startRowIndex": 0, "endRowIndex": 200, "startColumnIndex": 0, "endColumnIndex": 100}}},
+                {"unmergeCells": {"range": {"sheetId": 0, "startRowIndex": 0, "endRowIndex": 300, "startColumnIndex": 0, "endColumnIndex": 50}}},
                 {"mergeCells": {"range": {"sheetId": 0, "startRowIndex": 0, "endRowIndex": 1, "startColumnIndex": 0, "endColumnIndex": num_cols}, "mergeType": "MERGE_ALL"}},
                 {"repeatCell": {"range": {"sheetId": 0, "startRowIndex": 0, "endRowIndex": 1, "startColumnIndex": 0, "endColumnIndex": num_cols}, "cell": {"userEnteredFormat": {"backgroundColor": {"red": 0.91, "green": 0.94, "blue": 0.99}, "textFormat": {"bold": True, "fontSize": 13, "foregroundColor": {"red": 0.1, "green": 0.2, "blue": 0.5}}, "horizontalAlignment": "CENTER", "verticalAlignment": "MIDDLE"}}, "fields": "userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment)"}},
-                {"repeatCell": {"range": {"sheetId": 0, "startRowIndex": 1, "endRowIndex": 2, "startColumnIndex": 0, "endColumnIndex": num_cols}, "cell": {"userEnteredFormat": {"backgroundColor": {"red": 0.117, "green": 0.227, "blue": 0.372}, "textFormat": {"bold": True, "fontSize": 10, "foregroundColor": {"red": 1.0, "green": 1.0, "blue": 1.0}}, "horizontalAlignment": "CENTER", "verticalAlignment": "MIDDLE"}}, "fields": "userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment)"}},
+                {"repeatCell": {"range": {"sheetId": 0, "startRowIndex": 1, "endRowIndex": 2, "startColumnIndex": 0, "endColumnIndex": num_cols}, "cell": {"userEnteredFormat": {"backgroundColor": {"red": 0.05, "green": 0.18, "blue": 0.35}, "textFormat": {"bold": True, "fontSize": 10, "foregroundColor": {"red": 1.0, "green": 1.0, "blue": 1.0}}, "horizontalAlignment": "CENTER", "verticalAlignment": "MIDDLE"}}, "fields": "userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment)"}},
+                {"updateDimensionProperties": {"range": {"sheetId": 0, "dimension": "COLUMNS", "startIndex": 0, "endIndex": 1}, "properties": {"pixelSize": 180}, "fields": "pixelSize"}},
+                {"updateDimensionProperties": {"range": {"sheetId": 0, "dimension": "COLUMNS", "startIndex": 1, "endIndex": 2}, "properties": {"pixelSize": 100}, "fields": "pixelSize"}},
+                {"updateDimensionProperties": {"range": {"sheetId": 0, "dimension": "COLUMNS", "startIndex": 2, "endIndex": num_cols}, "properties": {"pixelSize": 140}, "fields": "pixelSize"}},
                 {"updateBorders": {"range": {"sheetId": 0, "startRowIndex": 0, "endRowIndex": len(rows_data), "startColumnIndex": 0, "endColumnIndex": num_cols}, "top": {"style": "SOLID", "color": {"red": 0.8, "green": 0.8, "blue": 0.8}}, "bottom": {"style": "SOLID", "color": {"red": 0.8, "green": 0.8, "blue": 0.8}}, "left": {"style": "SOLID", "color": {"red": 0.8, "green": 0.8, "blue": 0.8}}, "right": {"style": "SOLID", "color": {"red": 0.8, "green": 0.8, "blue": 0.8}}, "innerHorizontal": {"style": "SOLID", "color": {"red": 0.8, "green": 0.8, "blue": 0.8}}, "innerVertical": {"style": "SOLID", "color": {"red": 0.8, "green": 0.8, "blue": 0.8}}}}
             ]
 
@@ -649,7 +666,7 @@ class GoogleSheetsService:
                 "success": True,
                 "sheet_id": sheet_id,
                 "sheet_url": sheet_url,
-                "message": "Tự động tạo & nạp Google Sheet Danh sách Thực tập sinh thành công!"
+                "message": "🎉 Tự động tạo & làm sạch Google Sheet Danh sách Thực tập sinh thành công (Đúng 11 cột thông tin, không chứa cột lịch thừa)!"
             }
         except Exception as e:
             return {"success": False, "message": f"Lỗi tạo Sheet Thực tập sinh: {str(e)}"}
