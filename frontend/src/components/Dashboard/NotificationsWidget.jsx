@@ -40,59 +40,16 @@ export default function NotificationsWidget({ onNavigate }) {
     }
   };
 
-  // Fallback demo data if no OT items in DB yet
-  const displayItems = otList.length > 0 ? otList.slice(0, 7) : [
-    {
-      id: 101,
-      full_name: 'Nguyễn Văn A',
-      employee_code: 'NV001',
-      work_date: '2026-08-07',
-      start_time: '17:30',
-      end_time: '20:30',
-      weighted_hours: 4.5,
-      reason: 'Gấp deadline dự án Visa',
-      status: 'Pending',
-      project: 'Visa, BTTM'
-    },
-    {
-      id: 102,
-      full_name: 'Trần Đình Tiến',
-      employee_code: 'NV014',
-      work_date: '2026-08-07',
-      start_time: '18:00',
-      end_time: '21:00',
-      weighted_hours: 4.5,
-      reason: 'Bảo trì hệ thống Kho thông minh',
-      status: 'Approved',
-      project: 'Kho thông minh'
-    },
-    {
-      id: 103,
-      full_name: 'Đặng Quang Vinh',
-      employee_code: 'NV002',
-      work_date: '2026-08-06',
-      start_time: '17:30',
-      end_time: '19:30',
-      weighted_hours: 3.0,
-      reason: 'Fix bug dự án Tàu cá',
-      status: 'Approved',
-      project: 'Tàu cá'
-    },
-    {
-      id: 104,
-      full_name: 'Lại Quốc Đạt',
-      employee_code: 'NV010',
-      work_date: '2026-08-06',
-      start_time: '18:00',
-      end_time: '20:00',
-      weighted_hours: 3.0,
-      reason: 'Triển khai hạ tầng',
-      status: 'Pending',
-      project: 'Hạ tầng'
-    }
-  ];
+  // Sort newest OT notifications to the top (descending by created_at / work_date and ID)
+  const sortedList = Array.isArray(otList) ? [...otList].sort((a, b) => {
+    const timeA = new Date(a.created_at || a.work_date || 0).getTime();
+    const timeB = new Date(b.created_at || b.work_date || 0).getTime();
+    if (timeB !== timeA) return timeB - timeA;
+    return (b.id || 0) - (a.id || 0);
+  }) : [];
 
-  const pendingCount = displayItems.filter(i => i.status === 'Pending').length;
+  const displayItems = sortedList.slice(0, 8);
+  const pendingCount = sortedList.filter(i => i.status === 'Pending').length;
 
   return (
     <div className="vt-card animate-fade-in" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>

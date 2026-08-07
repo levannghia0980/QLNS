@@ -53,7 +53,7 @@ class AdminOvertimeService:
         if staff_category:
             q = q.filter(models.User.staff_category == staff_category)
 
-        records = q.order_by(models.OvertimeRequest.work_date.desc(), models.User.full_name).all()
+        records = q.order_by(models.OvertimeRequest.created_at.desc(), models.OvertimeRequest.work_date.desc(), models.OvertimeRequest.id.desc()).all()
         return [enrich_ot(r) for r in records]
 
     @staticmethod
