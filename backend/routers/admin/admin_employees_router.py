@@ -17,6 +17,57 @@ from services.google_sheets_service import GoogleSheetsService
 router = APIRouter(tags=["Admin - Employees, Interns & Schedules"])
 
 
+# ── Thống kê tổng quan Dashboard ───────────────────────────────────────────────
+@router.get("/admin/stats")
+@router.get("/stats")
+def get_dashboard_stats(
+    db: Session = Depends(get_db)
+):
+    employees = db.query(models.User).filter(models.User.user_type == "employee").all()
+    interns = db.query(models.User).filter(models.User.user_type == "intern").all()
+    
+    total_employees = len(employees)
+    total_interns = len(interns)
+    
+    emp_trung_tam = sum(1 for e in employees if e.staff_category == "NS Trung tâm" or e.employee_type == "NS Trung tâm")
+    emp_cho_muon = sum(1 for e in employees if e.staff_category == "Cho mượn" or e.employee_type == "Cho mượn")
+    emp_onsite = sum(1 for e in employees if e.staff_category == "Onsite" or e.employee_type == "Onsite")
+    
+    if emp_trung_tam == 0 and emp_cho_muon == 0 and emp_onsite == 0:
+        emp_trung_tam = total_employees
+        
+    borrowed_count = sum(1 for i in interns if i.employee_type == "Người mượn")
+    intern_count = total_interns - borrowed_count
+    
+    working = sum(1 for i in interns if (i.working_status or "Working") == "Working")
+    resigned = total_interns - working
+    
+    today_workers = []
+    for i in interns[:8]:
+        today_workers.append({
+            "employee_code": i.employee_code,
+            "full_name": i.full_name,
+            "department": i.project or "Công nghệ thông tin",
+            "position": i.position or i.role or "Thực tập sinh",
+            "time": "08:00 - 17:00",
+            "status": "Đang làm",
+            "shift": "SC"
+        })
+        
+    return {
+        "total_employees": total_employees,
+        "total_interns": total_interns,
+        "emp_trung_tam": emp_trung_tam,
+        "emp_cho_muon": emp_cho_muon,
+        "emp_onsite": emp_onsite,
+        "borrowed_count": borrowed_count,
+        "intern_count": intern_count,
+        "working": working,
+        "resigned": resigned,
+        "today_workers": today_workers
+    }
+
+
 # ── Danh sách nhân sự & Thực tập sinh ──────────────────────────────────────────
 @router.get("/employees/", response_model=List[schemas.UserResponse])
 def list_employees(
