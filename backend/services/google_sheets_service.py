@@ -887,4 +887,110 @@ class GoogleSheetsService:
                 "message": f"Lỗi tạo Google Sheet: {str(e)}"
             }
 
+    @staticmethod
+    def process_import_schedule_generic(rows: list, month: int, year: int, db: Session) -> dict:
+        """Hàm đồng bộ ma trận lịch trực TTS (1..31 ngày) từ Google Sheet hoặc Excel trực tiếp vào DB"""
+        if not rows or len(rows) < 2:
+            return {"message": "Dữ liệu Google Sheet rỗng", "count": 0}
+
+        header_idx = -1
+        day_cols = {}
+        code_col = 0
+        name_col = 1
+
+        for r_i, r in enumerate(rows[:5]):
+            if not r:
+                continue
+            found_days = {}
+            for c_i, val in enumerate(r):
+                val_str = str(val).strip()
+                val_lower = val_str.lower()
+                if "mã" in val_lower or "code" in val_lower:
+                    code_col = c_i
+                if "tên" in val_lower or "name" in val_lower or "họ" in val_lower:
+                    name_col = c_i
+                match = re.match(r'^(\d{1,2})', val_str)
+                if match:
+                    d_num = int(match.group(1))
+                    if 1 <= d_num <= 31:
+                        found_days[c_i] = d_num
+            if len(found_days) >= 5:
+                header_idx = r_i
+                day_cols = found_days
+                break
+
+        if header_idx == -1:
+            header_idx = 1
+            for c_i in range(2, min(len(rows[0]), 35)):
+                day_cols[c_i] = c_i - 1
+
+        period = db.query(models.SchedulePeriod).filter(
+            models.SchedulePeriod.month == month,
+            models.SchedulePeriod.year == year
+        ).first()
+        if not period:
+            period = models.SchedulePeriod(month=month, year=year, status="open")
+            db.add(period)
+            db.commit()
+            db.refresh(period)
+
+        data_rows = rows[header_idx + 1:]
+        count = 0
+
+        for r in data_rows:
+            if not r or len(r) <= max(code_col, name_col, 0):
+                continue
+            emp_code = str(r[code_col]).strip() if code_col < len(r) and r[code_col] else ""
+            full_name = str(r[name_col]).strip() if name_col < len(r) and r[name_col] else ""
+            if not emp_code and not full_name:
+                continue
+            if emp_code.lower().startswith("tổng") or full_name.lower().startswith("tổng"):
+                continue
+
+            user = None
+            if emp_code:
+                user = db.query(models.User).filter(models.User.employee_code == emp_code).first()
+            if not user and full_name:
+                user = db.query(models.User).filter(models.User.full_name == full_name).first()
+
+            if not user:
+                continue
+
+            for col_i, day_num in day_cols.items():
+                if col_i >= len(r):
+                    continue
+                shift_val = str(r[col_i]).strip().upper() if r[col_i] else ""
+                if shift_val not in ("S", "C", "SC"):
+                    shift_val = ""
+
+                try:
+                    w_date = date(year, month, day_num)
+                except ValueError:
+                    continue
+
+                sched = db.query(models.Schedule).filter(
+                    models.Schedule.user_id == user.id,
+                    models.Schedule.work_day == w_date
+                ).first()
+
+                if sched:
+                    if shift_val:
+                        sched.shift = shift_val
+                        sched.period_id = period.id
+                    else:
+                        db.delete(sched)
+                else:
+                    if shift_val:
+                        sched = models.Schedule(
+                            period_id=period.id,
+                            user_id=user.id,
+                            work_day=w_date,
+                            shift=shift_val
+                        )
+                        db.add(sched)
+                count += 1
+
+        db.commit()
+        return {"message": f"Đồng bộ thành công {count} ca trực từ Google Sheets!", "count": count}
+
 
