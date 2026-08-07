@@ -809,7 +809,9 @@ class GoogleSheetsService:
             allowance_raw = str(r[col_map["allowance"]]).strip() if "allowance" in col_map and col_map["allowance"] < len(r) and r[col_map["allowance"]] else "Không"
             allowance_val = "Có" if "có" in allowance_raw.lower() or "yes" in allowance_raw.lower() else "Không"
             
-            status_val = str(r[col_map["status"]]).strip() if "status" in col_map and col_map["status"] < len(r) and r[col_map["status"]] else "Của công ty"
+            status_raw = str(r[col_map["status"]]).strip() if "status" in col_map and col_map["status"] < len(r) and r[col_map["status"]] else "Của công ty"
+            emp_type_val = "Người mượn" if "mượn" in status_raw.lower() else "Của công ty"
+            work_status_val = "Resigned" if ("nghỉ" in status_raw.lower() or "resigned" in status_raw.lower()) else "Working"
             notes_val = str(r[col_map["notes"]]).strip() if "notes" in col_map and col_map["notes"] < len(r) and r[col_map["notes"]] else ""
 
             user = db.query(models.User).filter(
@@ -831,7 +833,8 @@ class GoogleSheetsService:
                 if proj_val: user.project = proj_val
                 if join_date_val: user.join_date = join_date_val
                 user.allowance = allowance_val
-                if status_val: user.employee_type = status_val; user.working_status = status_val
+                user.employee_type = emp_type_val
+                user.working_status = work_status_val
                 if notes_val: user.notes = notes_val
                 count += 1
             else:
@@ -854,8 +857,8 @@ class GoogleSheetsService:
                     join_date=join_date_val,
                     allowance=allowance_val,
                     notes=notes_val,
-                    employee_type=status_val,
-                    working_status=status_val,
+                    employee_type=emp_type_val,
+                    working_status=work_status_val,
                     account_status=1
                 )
                 db.add(new_user)

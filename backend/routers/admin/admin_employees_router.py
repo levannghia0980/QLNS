@@ -39,20 +39,32 @@ def get_dashboard_stats(
     borrowed_count = sum(1 for i in interns if i.employee_type == "Người mượn")
     intern_count = total_interns - borrowed_count
     
+    # Working status: 16 working, 0 resigned
     working = sum(1 for i in interns if (i.working_status or "Working") == "Working")
-    resigned = total_interns - working
+    resigned = sum(1 for i in interns if (i.working_status or "Working") == "Resigned")
+    
+    from datetime import date
+    today = date.today()
+    today_schedules = db.query(models.Schedule).filter(
+        models.Schedule.work_day == today,
+        models.Schedule.shift.isnot(None),
+        models.Schedule.shift != ""
+    ).all()
     
     today_workers = []
-    for i in interns[:8]:
-        today_workers.append({
-            "employee_code": i.employee_code,
-            "full_name": i.full_name,
-            "department": i.project or "Công nghệ thông tin",
-            "position": i.position or i.role or "Thực tập sinh",
-            "time": "08:00 - 17:00",
-            "status": "Đang làm",
-            "shift": "SC"
-        })
+    for s in today_schedules:
+        u = db.query(models.User).filter(models.User.id == s.user_id).first()
+        if u:
+            shift_time = "08:00 - 12:00" if s.shift == "S" else ("13:00 - 17:00" if s.shift == "C" else "08:00 - 17:00")
+            today_workers.append({
+                "employee_code": u.employee_code,
+                "full_name": u.full_name,
+                "department": u.project or "Công nghệ thông tin",
+                "position": u.position or u.role or "Thực tập sinh",
+                "time": shift_time,
+                "status": "Đang làm",
+                "shift": s.shift
+            })
         
     return {
         "total_employees": total_employees,
