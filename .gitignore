@@ -38,9 +38,8 @@ frontend/dist/
 # Environment variables & secrets
 .env
 backend/.env
-backend/config/google_credentials.json
-backend/config/google_oauth.json
-backend/formal-landing-*.json
+backend/config/*.json
+!backend/config/*.example.json
 *.key
 
 
