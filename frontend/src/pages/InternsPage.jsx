@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { GraduationCap, Plus, Search, Upload, Edit, Trash2, Calendar, X, Download, Link2, RefreshCw, Check, AlertCircle } from 'lucide-react';
+import { GraduationCap, Plus, Search, Upload, Edit, Trash2, Calendar, X, Download, Link2, RefreshCw, Check, AlertCircle, User, Users } from 'lucide-react';
 import axios from 'axios';
 import SchedulePage from './SchedulePage';
 
