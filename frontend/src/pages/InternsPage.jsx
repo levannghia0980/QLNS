@@ -577,8 +577,14 @@ export default function InternsPage() {
                 <strong>{selectedIntern.bank_name || '—'} ({selectedIntern.bank_account || '—'})</strong>
               </div>
               <div style={{ background: '#F8FAFC', padding: 12, borderRadius: 8, border: '1px solid #E2E8F0' }}>
+                <span style={{ fontSize: '0.75rem', color: '#64748B', display: 'block' }}>Loại TTS</span>
+                <strong style={{ color: '#2563EB' }}>{selectedIntern.employee_type || 'Của công ty'}</strong>
+              </div>
+              <div style={{ background: '#F8FAFC', padding: 12, borderRadius: 8, border: '1px solid #E2E8F0' }}>
                 <span style={{ fontSize: '0.75rem', color: '#64748B', display: 'block' }}>Phụ Cấp</span>
-                <strong style={{ color: '#059669' }}>{selectedIntern.allowance || 'Không'}</strong>
+                <strong style={{ color: selectedIntern.allowance === 'Có' ? '#059669' : '#64748B' }}>
+                  {selectedIntern.allowance === 'Có' ? 'Có' : 'Không'}
+                </strong>
               </div>
               <div style={{ background: '#F8FAFC', padding: 12, borderRadius: 8, border: '1px solid #E2E8F0' }}>
                 <span style={{ fontSize: '0.75rem', color: '#64748B', display: 'block' }}>Trạng Thái Làm Việc</span>
