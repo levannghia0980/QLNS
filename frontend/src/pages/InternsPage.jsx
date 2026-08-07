@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { GraduationCap, Plus, Search, Upload, Edit, Trash2, Calendar, X, Download, Link2, RefreshCw, Check, AlertCircle, User, Users } from 'lucide-react';
+import { GraduationCap, Plus, Search, Upload, Edit, Trash2, Calendar, X, Download, Link2, RefreshCw, Check, AlertCircle, User, Users, Copy, ExternalLink, Sparkles } from 'lucide-react';
 import axios from 'axios';
 import SchedulePage from './SchedulePage';
 
@@ -21,6 +21,7 @@ export default function InternsPage() {
   // Google Sheet Link state
   const [savedSheetUrl, setSavedSheetUrl] = useState(() => localStorage.getItem('interns_sheet_url') || '');
   const [tempLinkInput, setTempLinkInput] = useState('');
+  const [copiedLink, setCopiedLink] = useState(false);
   const [syncOption, setSyncOption] = useState('link'); // 'link' | 'file'
   const [syncLoading, setSyncLoading] = useState(false);
   const [autoCreateLoading, setAutoCreateLoading] = useState(false);
@@ -80,21 +81,27 @@ export default function InternsPage() {
       document.body.style.overflow = 'hidden';
       document.documentElement.style.overflow = 'hidden';
     } else {
-      document.body.style.overflow = '';
-      document.documentElement.style.overflow = '';
+      document.body.style.overflow = 'auto';
+      document.documentElement.style.overflow = 'auto';
     }
     return () => {
-      document.body.style.overflow = '';
-      document.documentElement.style.overflow = '';
+      document.body.style.overflow = 'auto';
+      document.documentElement.style.overflow = 'auto';
     };
   }, [isAddOpen, isEditOpen, isDetailOpen, isLinkModalOpen, isSyncModalOpen]);
 
+  // Fetch Intern List
   const fetchInterns = async () => {
     setLoading(true);
     try {
-      const res = await axios.get('/admin/users');
-      if (Array.isArray(res.data)) {
-        setInterns(res.data);
+      const token = localStorage.getItem('token');
+      const res = await axios.get('/admin/users', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = res.data?.users || res.data || [];
+      if (Array.isArray(data)) {
+        const internList = data.filter(u => u.user_type === 'intern' || (u.employee_code && u.employee_code.startsWith('TTS')));
+        setInterns(internList);
       } else {
         setInterns([]);
       }
@@ -149,13 +156,15 @@ export default function InternsPage() {
     }
   };
 
-  // Auto Create Google Sheet for Intern List
-  const handleAutoCreateSheet = async () => {
+  // Auto Create / Update Google Sheet for Intern List
+  const handleAutoCreateSheet = async (isNew = false) => {
     setAutoCreateLoading(true);
     try {
       const token = localStorage.getItem('token');
+      const targetUrl = isNew ? undefined : (savedSheetUrl || tempLinkInput.trim() || undefined);
+
       const res = await axios.post('/admin/users/auto-create-sheet', {
-        target_sheet_url: tempLinkInput.trim() || undefined
+        target_sheet_url: targetUrl
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -165,8 +174,10 @@ export default function InternsPage() {
         setTempLinkInput(createdUrl);
         setSavedSheetUrl(createdUrl);
         localStorage.setItem('interns_sheet_url', createdUrl);
-        setStatusMsg('🎉 Tự động tạo Google Sheet Danh sách TTS thành công!');
+        setIsLinkModalOpen(false);
+        setStatusMsg(isNew ? '🎉 Đã tạo Google Sheet MỚI TINH thành công!' : '🎉 Đã cập nhật đè lên Google Sheet hiện tại thành công!');
         setTimeout(() => setStatusMsg(''), 5000);
+        window.open(createdUrl, '_blank');
       } else if (res.data?.activation_url) {
         alert(`⚠️ Vui lòng BẬT dịch vụ Google Sheets API trên dự án Google Cloud:\n${res.data.activation_url}`);
         window.open(res.data.activation_url, '_blank');
@@ -178,6 +189,25 @@ export default function InternsPage() {
     } finally {
       setAutoCreateLoading(false);
     }
+  };
+
+  // Clear Link
+  const handleClearLink = () => {
+    if (!confirm('Bạn có chắc chắn muốn xóa Link Google Sheets này?')) return;
+    localStorage.removeItem('interns_sheet_url');
+    setSavedSheetUrl('');
+    setTempLinkInput('');
+    setStatusMsg('Đã xóa Link Google Sheets khỏi bộ nhớ tạm');
+    setTimeout(() => setStatusMsg(''), 3000);
+  };
+
+  // Copy link to clipboard
+  const handleCopyLink = () => {
+    if (!tempLinkInput && !savedSheetUrl) return;
+    const linkToCopy = tempLinkInput || savedSheetUrl;
+    navigator.clipboard?.writeText(linkToCopy);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 3000);
   };
 
   // Save Link Sheet Manual
@@ -754,7 +784,7 @@ export default function InternsPage() {
         document.body
       )}
 
-      {/* MODAL 3: Configure Google Sheet Link Modal */}
+      {/* MODAL 3: Configure Google Sheet Link Modal (Exact replica of SchedulePage design & features) */}
       {isLinkModalOpen && createPortal(
         <div 
           style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(4px)', zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, overflow: 'hidden' }}
@@ -766,48 +796,108 @@ export default function InternsPage() {
           >
             <div style={{ background: '#EE0033', color: 'white', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0, color: 'white' }}>
-                Cấu Hình Google Sheet Danh Sách TTS
+                Cấu Hình Link Google Sheets
               </h3>
               <button onClick={() => setIsLinkModalOpen(false)} style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}><X size={20} /></button>
             </div>
 
-            <form onSubmit={handleSaveLink} style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <div>
-                <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#0F172A', marginBottom: 6, display: 'block' }}>
-                  Link Google Sheet Danh sách Thực tập sinh (*):
-                </label>
-                <input 
-                  type="url" 
-                  className="vt-search-input" 
-                  style={{ width: '100%', padding: '10px 14px' }}
-                  placeholder="https://docs.google.com/spreadsheets/d/..."
-                  value={tempLinkInput}
-                  onChange={(e) => setTempLinkInput(e.target.value)}
-                />
-              </div>
-
-              <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', padding: 14, borderRadius: 10 }}>
-                <p style={{ margin: 0, fontSize: '0.8rem', color: '#475569', lineHeight: 1.5 }}>
-                  💡 Bấm nút xanh phía dưới để <strong>Tự Động Tạo Sheet Mới</strong> trong Google Drive. Bạn có thể nhập thêm tên TTS mới lên Sheet mà không cần điền Mã NV ➔ Khi đồng bộ, hệ thống sẽ tự động thêm TTS vào CSDL và tự tăng Mã NV lên!
+            <form onSubmit={handleSaveLink} style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 18 }}>
+              {/* Green Box: Auto create / update Google Sheet in personal Google Drive */}
+              <div style={{ background: '#ECFDF5', border: '1px solid #A7F3D0', borderRadius: 10, padding: '16px', display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center', textAlign: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#047857', fontWeight: 700, fontSize: '0.92rem' }}>
+                  <Sparkles size={16} />
+                  <span>Tự động sinh Google Sheet bằng Tài khoản Google của bạn:</span>
+                </div>
+                <p style={{ fontSize: '0.78rem', color: '#065F46', margin: 0, lineHeight: 1.4 }}>
+                  Tự động khởi tạo file Google Sheet chứa sẵn dữ liệu thực tập sinh từ CSDL vào Google Drive cá nhân của bạn!
                 </p>
-              </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 8 }}>
+                {savedSheetUrl ? (
+                  <button 
+                    type="button" 
+                    className="vt-btn-primary" 
+                    style={{ background: '#059669', width: '100%', padding: '10px', fontSize: '0.85rem', fontWeight: 700, borderRadius: 8, cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6 }}
+                    onClick={() => handleAutoCreateSheet(false)}
+                    disabled={autoCreateLoading}
+                  >
+                    <Sparkles size={15} />
+                    <span>{autoCreateLoading ? 'Đang cập nhật Google Sheet...' : '✨ CẬP NHẬT SHEET HIỆN TẠI'}</span>
+                  </button>
+                ) : null}
+
                 <button 
                   type="button" 
                   className="vt-btn-primary" 
-                  style={{ background: '#2563EB', padding: '10px 16px', justifyContent: 'center' }}
-                  onClick={handleAutoCreateSheet}
+                  style={{ background: '#2563EB', width: '100%', padding: '10px', fontSize: '0.85rem', fontWeight: 700, borderRadius: 8, cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6 }}
+                  onClick={() => handleAutoCreateSheet(true)}
                   disabled={autoCreateLoading}
                 >
-                  <Link2 size={16} />
-                  <span>{autoCreateLoading ? 'Đang tạo Google Sheet...' : '✨ TỰ ĐỘNG TẠO GOOGLE SHEET DANH SÁCH TTS'}</span>
+                  <RefreshCw size={15} className={autoCreateLoading ? 'animate-spin' : ''} />
+                  <span>{autoCreateLoading ? 'Đang khởi tạo Google Sheet...' : '🔄 TẠO FILE GOOGLE SHEET MỚI TINH'}</span>
                 </button>
+              </div>
 
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
-                  <button type="button" className="vt-select-sm" onClick={() => setIsLinkModalOpen(false)}>Hủy</button>
-                  <button type="submit" className="vt-btn-primary" style={{ padding: '8px 20px' }}>Lưu Link</button>
+              {/* Input Link section */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                  <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#0F172A', margin: 0 }}>
+                    Link Google Sheets hiện tại (*):
+                  </label>
+                  {(tempLinkInput || savedSheetUrl) && (
+                    <button
+                      type="button"
+                      onClick={handleClearLink}
+                      style={{ background: 'transparent', border: 'none', color: '#EE0033', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
+                    >
+                      Xóa Link Cũ Này
+                    </button>
+                  )}
                 </div>
+
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <input 
+                    type="url" 
+                    className="vt-search-input" 
+                    style={{ flex: 1, padding: '8px 12px', fontSize: '0.85rem' }} 
+                    placeholder="https://docs.google.com/spreadsheets/d/..." 
+                    value={tempLinkInput} 
+                    onChange={e => setTempLinkInput(e.target.value)} 
+                    required 
+                  />
+
+                  {(tempLinkInput || savedSheetUrl) && (
+                    <>
+                      <button 
+                        type="button" 
+                        style={{ background: copiedLink ? '#DCFCE7' : '#EFF6FF', border: '1px solid #93C5FD', color: copiedLink ? '#15803D' : '#1D4ED8', padding: '8px 12px', borderRadius: 6, fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+                        onClick={handleCopyLink}
+                        title="Sao chép Link chia sẻ"
+                      >
+                        <Copy size={14} />
+                        <span>{copiedLink ? 'Đã chép!' : 'Chép Link'}</span>
+                      </button>
+
+                      <a 
+                        href={tempLinkInput || savedSheetUrl} 
+                        target="_blank" 
+                        rel="noreferrer"
+                        style={{ background: '#ECFDF5', border: '1px solid #6EE7B7', color: '#047857', padding: '8px 12px', borderRadius: 6, fontSize: '0.8rem', fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}
+                        title="Mở Google Sheets"
+                      >
+                        <ExternalLink size={14} />
+                        <span>Mở Sheet</span>
+                      </a>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 4 }}>
+                <button type="button" className="vt-select-sm" style={{ padding: '6px 14px', cursor: 'pointer' }} onClick={() => setIsLinkModalOpen(false)}>Hủy</button>
+                <button type="submit" className="vt-btn-primary" style={{ padding: '6px 16px', background: '#EE0033' }}>
+                  <span>Lưu Link Sheet CSDL</span>
+                </button>
               </div>
             </form>
           </div>
