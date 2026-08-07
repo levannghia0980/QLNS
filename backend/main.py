@@ -109,18 +109,25 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Routers
-from routers import auth_router, user_router, admin_router, schedule_router
-from routers import employee_router, overtime_router, hrai_router, google_router
-app.include_router(auth_router.router)
-app.include_router(user_router.router)
-app.include_router(admin_router.router)
-app.include_router(schedule_router.router)
-app.include_router(employee_router.router)
-app.include_router(overtime_router.router)
-app.include_router(hrai_router.router)
-app.include_router(hrai_router.router, prefix="/api")
-app.include_router(google_router.router)
+# ── Modular Routers (Admin, Employee, Intern, Auth, AI HR, Google) ───────────
+from routers.auth_router import router as auth_router
+from routers.admin.admin_employees_router import router as admin_employees_router
+from routers.admin.admin_overtime_router import router as admin_overtime_router
+from routers.employee.employee_profile_router import router as employee_profile_router
+from routers.employee.employee_overtime_router import router as employee_overtime_router
+from routers.intern.intern_schedule_router import router as intern_schedule_router
+from routers.hrai_router import router as hrai_router
+from routers.google_router import router as google_router
+
+app.include_router(auth_router)
+app.include_router(admin_employees_router)
+app.include_router(admin_overtime_router)
+app.include_router(employee_profile_router)
+app.include_router(employee_overtime_router)
+app.include_router(intern_schedule_router)
+app.include_router(hrai_router)
+app.include_router(hrai_router, prefix="/api")
+app.include_router(google_router)
 
 
 # Serve frontend (React App)

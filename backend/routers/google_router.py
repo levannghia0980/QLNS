@@ -9,7 +9,7 @@ from database import get_db
 import models
 import auth
 from services.google_sheets_service import GoogleSheetsService
-from services.admin_service import AdminService
+from services.admin.admin_employee_service import AdminEmployeeService as AdminService
 
 router = APIRouter(prefix="/api/google", tags=["Unified Google Integration Pipeline"])
 

@@ -23,6 +23,10 @@ class ChangePasswordRequest(BaseModel):
     new_password: str
 
 
+class AdminResetPasswordRequest(BaseModel):
+    new_password: str
+
+
 # ─── Position ─────────────────────────────────────────────────────────────────
 class PositionResponse(BaseModel):
     id: int
@@ -315,7 +319,49 @@ class AdminAccountRow(BaseModel):
         from_attributes = True
 
 
+# ─── Schedule ─────────────────────────────────────────────────────────────────
+class SchedulePeriodResponse(BaseModel):
+    id: int
+    month: int
+    year: int
+    status: str
+    open_date: Optional[datetime] = None
+    close_date: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+class SchedulePeriodOpen(BaseModel):
+    month: int
+    year: int
+    close_date: Optional[datetime] = None
+
+
+class ScheduleRegistrationItem(BaseModel):
+    work_day: date
+    shift: str  # S / C / SC
+
+
+class ScheduleRegistration(BaseModel):
+    items: List[ScheduleRegistrationItem]
+
+
+class ScheduleResponse(BaseModel):
+    id: int
+    work_day: date
+    shift: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
 # ─── Overtime ─────────────────────────────────────────────────────────────────
+class OvertimePreviewRequest(BaseModel):
+    work_date: date
+    start_time: str
+    end_time: str
+    is_holiday: bool = False
 
 
 class OvertimeCreate(BaseModel):
