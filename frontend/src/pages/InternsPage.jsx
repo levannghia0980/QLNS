@@ -369,11 +369,11 @@ export default function InternsPage() {
       {subTab === 'interns' && (
         <div className="vt-card vt-table-card animate-fade-in">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
-            <div className="vt-search-box" style={{ width: 300 }}>
+            <div className="vt-search-box" style={{ width: 320 }}>
               <Search size={15} className="vt-search-icon" />
               <input 
                 type="text" 
-                placeholder="Tìm tên, Mã TTS, Dự án, Ghi chú..." 
+                placeholder="Tìm tên, Mã TTS, Dự án..." 
                 className="vt-search-input"
                 style={{ width: '100%' }}
                 value={searchTerm}
@@ -381,134 +381,118 @@ export default function InternsPage() {
               />
             </div>
 
-            {/* Action Buttons Bar Styled Identically to SchedulePage */}
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-              <button 
-                className="vt-btn-secondary" 
-                style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', fontSize: '0.8rem', background: '#F8FAFC', color: '#0F172A', border: '1px solid #CBD5E1', borderRadius: 6, fontWeight: 600, cursor: 'pointer' }}
-                onClick={() => { setTempLinkInput(savedSheetUrl); setIsLinkModalOpen(true); }}
-              >
-                <Link2 size={14} />
-                <span>{savedSheetUrl ? 'Sửa Link Sheet' : 'Tạo Link Sheet'}</span>
-              </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '0.8rem', color: '#64748B', fontStyle: 'italic' }}>
+                💡 Mẹo: Nhấn đúp 2 lần vào hàng để xem đầy đủ hồ sơ chi tiết TTS
+              </span>
 
-              <button 
-                className="vt-btn-secondary" 
-                style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', fontSize: '0.8rem', background: '#EFF6FF', color: '#2563EB', border: '1px solid #2563EB', borderRadius: 6, fontWeight: 600, cursor: 'pointer' }}
-                onClick={() => setIsSyncModalOpen(true)}
-              >
-                <RefreshCw size={14} className={syncLoading ? 'animate-spin' : ''} />
-                <span>Đồng Bộ Danh Sách TTS</span>
-              </button>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <button 
+                  className="vt-btn-secondary" 
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', fontSize: '0.8rem', background: '#F8FAFC', color: '#0F172A', border: '1px solid #CBD5E1', borderRadius: 6, fontWeight: 600, cursor: 'pointer' }}
+                  onClick={() => { setTempLinkInput(savedSheetUrl); setIsLinkModalOpen(true); }}
+                >
+                  <Link2 size={14} />
+                  <span>{savedSheetUrl ? 'Sửa Link Sheet' : 'Tạo Link Sheet'}</span>
+                </button>
 
-              <button 
-                className="vt-btn-primary" 
-                style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#059669', padding: '6px 12px', fontSize: '0.8rem', borderRadius: 6, fontWeight: 600, cursor: 'pointer', border: 'none' }} 
-                onClick={handleExportExcel}
-              >
-                <Download size={14} />
-                <span>Xuất Excel</span>
-              </button>
+                <button 
+                  className="vt-btn-secondary" 
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', fontSize: '0.8rem', background: '#EFF6FF', color: '#2563EB', border: '1px solid #2563EB', borderRadius: 6, fontWeight: 600, cursor: 'pointer' }}
+                  onClick={() => setIsSyncModalOpen(true)}
+                >
+                  <RefreshCw size={14} className={syncLoading ? 'animate-spin' : ''} />
+                  <span>Đồng Bộ Sheet</span>
+                </button>
+
+                <button 
+                  className="vt-btn-primary" 
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#059669', padding: '6px 12px', fontSize: '0.8rem', borderRadius: 6, fontWeight: 600, cursor: 'pointer', border: 'none' }} 
+                  onClick={handleExportExcel}
+                >
+                  <Download size={14} />
+                  <span>Xuất Excel</span>
+                </button>
+              </div>
             </div>
           </div>
 
-          <div style={{ overflowX: 'auto' }}>
-            <table className="vt-table" style={{ fontSize: '0.85rem', width: '100%' }}>
-              <thead>
+          <table className="vt-table">
+            <thead>
+              <tr>
+                <th style={{ width: 60, textAlign: 'center' }}>MÃ TTS</th>
+                <th>HỌ VÀ TÊN</th>
+                <th>VỊ TRÍ / ROLE</th>
+                <th>DỰ ÁN</th>
+                <th style={{ textAlign: 'center' }}>THỜI GIAN TT</th>
+                <th style={{ textAlign: 'center' }}>PHỤ CẤP</th>
+                <th style={{ textAlign: 'center' }}>STATUS</th>
+                <th style={{ textAlign: 'center', width: 90 }}>THAO TÁC</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
                 <tr>
-                  <th style={{ textAlign: 'center', width: 50 }}>STT</th>
-                  <th>HỌ VÀ TÊN</th>
-                  <th style={{ textAlign: 'center' }}>VỊ TRÍ / ROLE</th>
-                  <th>DỰ ÁN</th>
-                  <th style={{ textAlign: 'center' }}>THỜI GIAN TT</th>
-                  <th style={{ textAlign: 'center' }}>PHỤ CẤP</th>
-                  <th style={{ textAlign: 'center' }}>STATUS</th>
-                  <th style={{ textAlign: 'center', width: 110 }}>THAO TÁC</th>
+                  <td colSpan={8} style={{ textAlign: 'center', padding: 24, color: '#EE0033' }}>
+                    Đang nạp danh sách thực tập sinh từ CSDL Backend...
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {loading ? (
-                  <tr>
-                    <td colSpan={8} style={{ textAlign: 'center', padding: 24, color: '#EE0033' }}>
-                      Đang nạp danh sách thực tập sinh...
-                    </td>
-                  </tr>
-                ) : filtered.length > 0 ? filtered.map((intern, idx) => {
-                  return (
-                    <tr 
-                      key={intern.id || idx}
-                      onDoubleClick={() => handleRowDoubleClick(intern)}
-                      style={{ cursor: 'pointer' }}
-                      title="Nhấn đúp chuột để xem chi tiết đầy đủ thông tin thực tập sinh này"
-                    >
-                      <td style={{ textAlign: 'center', fontWeight: 700, color: '#EE0033' }}>{idx + 1}</td>
-                      <td style={{ fontWeight: 600, color: '#0F172A', whiteSpace: 'nowrap' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <div style={{ background: '#EFF6FF', padding: 5, borderRadius: 6, display: 'flex' }}>
-                            <User size={14} color="#2563EB" />
-                          </div>
-                          <span style={{ fontSize: '0.88rem' }}>{intern.full_name || '—'}</span>
-                        </div>
-                      </td>
-                      <td style={{ textAlign: 'center' }}>
-                        <span className="vt-badge vt-badge-primary" style={{ fontSize: '0.74rem', padding: '3px 10px' }}>
-                          {intern.position || intern.role || 'Dev'}
-                        </span>
-                      </td>
-                      <td style={{ color: '#059669', fontWeight: 600, fontSize: '0.86rem' }}>{intern.project || '—'}</td>
-                      <td style={{ textAlign: 'center', fontWeight: 700, color: '#D97706', whiteSpace: 'nowrap' }}>
-                        {calcDuration(intern.join_date)}
-                      </td>
-                      <td style={{ textAlign: 'center' }}>
-                        <span className={`vt-badge ${intern.allowance === 'Có' ? 'vt-badge-success' : 'vt-badge-warning'}`} style={{ fontSize: '0.74rem', padding: '3px 10px' }}>
-                          {intern.allowance === 'Có' ? 'Có' : 'Không'}
-                        </span>
-                      </td>
-                      <td style={{ textAlign: 'center' }}>
-                        <span className={`vt-badge ${intern.working_status === 'Working' ? 'vt-badge-success' : 'vt-badge-danger'}`} style={{ fontSize: '0.74rem', padding: '3px 10px' }}>
-                          {intern.working_status || 'Working'}
-                        </span>
-                      </td>
-                      <td style={{ textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
-                        <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
-                          <button 
-                            className="vt-btn-icon" 
-                            title="Xem chi tiết đầy đủ từ A-Z"
-                            onClick={() => handleRowDoubleClick(intern)}
-                            style={{ color: '#059669', cursor: 'pointer', border: 'none', background: '#ECFDF5', borderRadius: 6, padding: '5px 8px' }}
-                          >
-                            <Users size={15} />
-                          </button>
-                          <button 
-                            className="vt-btn-icon" 
-                            title="Chỉnh sửa thông tin"
-                            onClick={(e) => handleOpenEdit(intern, e)}
-                            style={{ color: '#2563EB', cursor: 'pointer', border: 'none', background: '#EFF6FF', borderRadius: 6, padding: '5px 8px' }}
-                          >
-                            <Edit size={15} />
-                          </button>
-                          <button 
-                            className="vt-btn-icon text-danger" 
-                            title="Xóa thực tập sinh"
-                            onClick={(e) => handleDelete(intern, e)}
-                            style={{ color: '#EE0033', cursor: 'pointer', border: 'none', background: '#FEF2F2', borderRadius: 6, padding: '5px 8px' }}
-                          >
-                            <Trash2 size={15} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                }) : (
-                  <tr>
-                    <td colSpan={8} style={{ textAlign: 'center', padding: 24, color: '#94A3B8' }}>
-                      Không tìm thấy thực tập sinh nào
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+              ) : filtered.length > 0 ? filtered.map((intern, idx) => (
+                <tr 
+                  key={intern.id || idx}
+                  onDoubleClick={() => handleRowDoubleClick(intern)}
+                  style={{ cursor: 'pointer' }}
+                  title="Nhấn đúp chuột để xem chi tiết đầy đủ thông tin thực tập sinh này"
+                >
+                  <td style={{ textAlign: 'center', fontWeight: 700, color: '#EE0033' }}>{intern.employee_code || `TTS${idx + 1}`}</td>
+                  <td style={{ fontWeight: 600, color: '#0F172A' }}>{intern.full_name || '—'}</td>
+                  <td>
+                    <span className="vt-badge vt-badge-primary">
+                      {intern.position || intern.role || 'Dev'}
+                    </span>
+                  </td>
+                  <td style={{ color: '#059669', fontWeight: 600 }}>{intern.project || '—'}</td>
+                  <td style={{ textAlign: 'center', fontWeight: 700, color: '#D97706' }}>
+                    {calcDuration(intern.join_date)}
+                  </td>
+                  <td style={{ textAlign: 'center' }}>
+                    <span className={`vt-badge ${intern.allowance === 'Có' ? 'vt-badge-success' : 'vt-badge-warning'}`}>
+                      {intern.allowance === 'Có' ? 'Có' : 'Không'}
+                    </span>
+                  </td>
+                  <td style={{ textAlign: 'center' }}>
+                    <span className={`vt-badge ${intern.working_status === 'Working' ? 'vt-badge-success' : 'vt-badge-danger'}`}>
+                      {intern.working_status || 'Working'}
+                    </span>
+                  </td>
+                  <td style={{ textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
+                    <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+                      <button 
+                        title="Chỉnh sửa thông tin"
+                        onClick={(e) => handleOpenEdit(intern, e)}
+                        style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: '#2563EB', padding: 4 }}
+                      >
+                        <Edit size={16} />
+                      </button>
+                      <button 
+                        title="Xóa thực tập sinh"
+                        onClick={(e) => handleDelete(intern, e)}
+                        style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: '#EE0033', padding: 4 }}
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              )) : (
+                <tr>
+                  <td colSpan={8} style={{ textAlign: 'center', padding: 24, color: '#94A3B8' }}>
+                    Không tìm thấy thực tập sinh nào trong CSDL
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       )}
 
