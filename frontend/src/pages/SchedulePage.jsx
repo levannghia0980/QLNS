@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Download, Search, Upload, Link as LinkIcon, RefreshCw, CheckCircle, AlertCircle, X, ExternalLink, Sparkles, Copy } from 'lucide-react';
 import axios from 'axios';
 
@@ -22,6 +23,21 @@ export default function SchedulePage() {
   const [copiedLink, setCopiedLink] = useState(false);
 
   const fileInputRef = useRef(null);
+
+  // Lock body & html scroll when any modal is open
+  useEffect(() => {
+    if (isCreateLinkOpen || isSyncModalOpen) {
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+      document.documentElement.style.overflow = 'auto';
+    }
+    return () => {
+      document.body.style.overflow = 'auto';
+      document.documentElement.style.overflow = 'auto';
+    };
+  }, [isCreateLinkOpen, isSyncModalOpen]);
 
   useEffect(() => {
     fetchSchedule();
@@ -391,22 +407,28 @@ export default function SchedulePage() {
       </div>
 
       {/* Modal 1: Tạo & Dán Link Google Sheets */}
-      {isCreateLinkOpen && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <div className="vt-card animate-fade-in" style={{ width: '100%', maxWidth: 540, padding: 0, overflow: 'hidden' }}>
-            <div style={{ background: '#EE0033', color: 'white', padding: '14px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ fontSize: '1rem', fontWeight: 700, margin: 0, color: 'white' }}>Cấu Hình Link Google Sheets</h3>
-              <button onClick={() => setIsCreateLinkOpen(false)} style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}><X size={18} /></button>
+      {isCreateLinkOpen && createPortal(
+        <div 
+          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(4px)', zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, overflow: 'hidden' }}
+          onClick={() => setIsCreateLinkOpen(false)}
+        >
+          <div 
+            style={{ width: '100%', maxWidth: 540, background: '#ffffff', borderRadius: 16, boxShadow: '0 25px 50px -12px rgba(0,0,0,0.4)', overflow: 'hidden', zIndex: 1000000, position: 'relative' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ background: '#EE0033', color: 'white', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0, color: 'white' }}>Cấu Hình Link Google Sheets</h3>
+              <button onClick={() => setIsCreateLinkOpen(false)} style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}><X size={20} /></button>
             </div>
 
-            <form onSubmit={handleSaveLink} style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <form onSubmit={handleSaveLink} style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 18 }}>
               {/* 1-Click Auto Create Section */}
-              <div style={{ background: '#F0FDF4', border: '1px solid #86EFAC', borderRadius: 10, padding: 16, textAlign: 'center' }}>
-                <h4 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#166534', marginTop: 0, marginBottom: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                  <Sparkles size={16} color="#16A34A" />
+              <div style={{ background: '#ECFDF5', border: '1px solid #A7F3D0', borderRadius: 10, padding: 16, textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#047857', fontWeight: 700, fontSize: '0.92rem', justifyContent: 'center' }}>
+                  <Sparkles size={16} />
                   <span>Tự động sinh Google Sheet bằng Tài khoản Google của bạn:</span>
-                </h4>
-                <p style={{ fontSize: '0.78rem', color: '#15803D', margin: '0 0 12px 0', lineHeight: 1.4 }}>
+                </div>
+                <p style={{ fontSize: '0.78rem', color: '#065F46', margin: 0, lineHeight: 1.4 }}>
                   Tự động khởi tạo file Google Sheet chứa sẵn dữ liệu thực tập sinh từ CSDL vào Google Drive cá nhân của bạn!
                 </p>
 
@@ -414,7 +436,7 @@ export default function SchedulePage() {
                   <button 
                     type="button" 
                     className="vt-btn-primary" 
-                    style={{ background: '#16A34A', padding: '10px 16px', fontSize: '0.85rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}
+                    style={{ background: '#059669', padding: '10px 16px', fontSize: '0.85rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer', borderRadius: 8 }}
                     onClick={() => handleAutoCreateGoogleSheet(false)}
                     disabled={autoCreateLoading}
                   >
@@ -425,7 +447,7 @@ export default function SchedulePage() {
                   <button 
                     type="button" 
                     className="vt-btn-primary" 
-                    style={{ background: '#2563EB', padding: '10px 16px', fontSize: '0.85rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}
+                    style={{ background: '#2563EB', padding: '10px 16px', fontSize: '0.85rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer', borderRadius: 8 }}
                     onClick={() => handleAutoCreateGoogleSheet(true)}
                     disabled={autoCreateLoading}
                     title="Tạo mới hoàn toàn 1 file Google Sheet mới và hủy liên kết file cũ"
@@ -493,32 +515,39 @@ export default function SchedulePage() {
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 4 }}>
                 <button type="button" className="vt-select-sm" style={{ padding: '6px 14px', cursor: 'pointer' }} onClick={() => setIsCreateLinkOpen(false)}>Hủy</button>
-                <button type="submit" className="vt-btn-primary" style={{ padding: '6px 16px' }}>
+                <button type="submit" className="vt-btn-primary" style={{ padding: '6px 16px', background: '#EE0033' }}>
                   <span>Lưu Link Sheet CSDL</span>
                 </button>
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {/* Modal 2: Đồng Bộ Lịch */}
-      {isSyncModalOpen && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <div className="vt-card animate-fade-in" style={{ width: '100%', maxWidth: 520, padding: 0, overflow: 'hidden' }}>
-            <div style={{ background: '#0F172A', color: 'white', padding: '14px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ fontSize: '1rem', fontWeight: 700, margin: 0, color: 'white' }}>Chọn Phương Thức Đồng Bộ Lịch</h3>
-              <button onClick={() => setIsSyncModalOpen(false)} style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}><X size={18} /></button>
+      {/* Modal 2: Đồng Bộ Lịch (Styled in Viettel Red with Portal) */}
+      {isSyncModalOpen && createPortal(
+        <div 
+          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(4px)', zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, overflow: 'hidden' }}
+          onClick={() => setIsSyncModalOpen(false)}
+        >
+          <div 
+            style={{ width: '100%', maxWidth: 520, background: '#ffffff', borderRadius: 16, boxShadow: '0 25px 50px -12px rgba(0,0,0,0.4)', overflow: 'hidden', zIndex: 1000000, position: 'relative' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ background: '#EE0033', color: 'white', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0, color: 'white' }}>Chọn Phương Thức Đồng Bộ Lịch</h3>
+              <button onClick={() => setIsSyncModalOpen(false)} style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}><X size={20} /></button>
             </div>
 
-            <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
               {/* Option 1: Đồng bộ theo Link đã tạo */}
               <div 
                 style={{ 
                   padding: 16, 
-                  borderRadius: 8, 
-                  border: syncOption === 'link' ? '2px solid #2563EB' : '1px solid #CBD5E1', 
-                  background: syncOption === 'link' ? '#EFF6FF' : '#F8FAFC',
+                  borderRadius: 10, 
+                  border: syncOption === 'link' ? '2px solid #EE0033' : '1px solid #CBD5E1', 
+                  background: syncOption === 'link' ? '#FEF2F2' : '#F8FAFC',
                   cursor: 'pointer'
                 }}
                 onClick={() => setSyncOption('link')}
@@ -536,9 +565,9 @@ export default function SchedulePage() {
               <div 
                 style={{ 
                   padding: 16, 
-                  borderRadius: 8, 
-                  border: syncOption === 'file' ? '2px solid #059669' : '1px solid #CBD5E1', 
-                  background: syncOption === 'file' ? '#ECFDF5' : '#F8FAFC',
+                  borderRadius: 10, 
+                  border: syncOption === 'file' ? '2px solid #EE0033' : '1px solid #CBD5E1', 
+                  background: syncOption === 'file' ? '#FEF2F2' : '#F8FAFC',
                   cursor: 'pointer'
                 }}
                 onClick={() => setSyncOption('file')}
@@ -561,14 +590,14 @@ export default function SchedulePage() {
               />
 
               {/* Submit Buttons */}
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 10 }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 8 }}>
                 <button type="button" className="vt-select-sm" style={{ padding: '8px 16px', cursor: 'pointer' }} onClick={() => setIsSyncModalOpen(false)}>Hủy</button>
                 
                 {syncOption === 'link' ? (
                   <button 
                     type="button" 
                     className="vt-btn-primary" 
-                    style={{ background: '#2563EB', padding: '8px 16px' }}
+                    style={{ background: '#EE0033', padding: '8px 20px', borderRadius: 8 }}
                     onClick={handleSyncFromLink}
                     disabled={syncLoading || !savedSheetUrl}
                   >
@@ -578,7 +607,7 @@ export default function SchedulePage() {
                   <button 
                     type="button" 
                     className="vt-btn-primary" 
-                    style={{ background: '#059669', padding: '8px 16px' }}
+                    style={{ background: '#EE0033', padding: '8px 20px', borderRadius: 8 }}
                     onClick={() => fileInputRef.current?.click()}
                     disabled={syncLoading}
                   >
@@ -588,7 +617,8 @@ export default function SchedulePage() {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
