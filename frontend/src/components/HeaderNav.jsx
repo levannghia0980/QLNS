@@ -8,24 +8,8 @@ export default function HeaderNav({ activeTab, setActiveTab, user, onLogout, onP
   const isEmployee = user?.user_type === 'employee';
   const isIntern = !isAdmin && !isEmployee;
 
-  // Determine active main section
-  const getMainSection = (tab) => {
-    if (['employees', 'accounts', 'overtime'].includes(tab)) return 'employees';
-    if (['interns', 'schedule'].includes(tab)) return 'interns';
-    if (['hrai-chat', 'hrai-sheets', 'hrai-db'].includes(tab)) return 'ai';
-    return tab;
-  };
-
-  const mainActive = getMainSection(activeTab);
-
   const handleNavClick = (section) => {
-    if (section === 'dashboard') setActiveTab('dashboard');
-    else if (section === 'employees') setActiveTab('employees');
-    else if (section === 'interns') setActiveTab('interns');
-    else if (section === 'ai') setActiveTab('hrai-chat');
-    else if (section === 'schedule') setActiveTab('schedule');
-    else if (section === 'overtime') setActiveTab('overtime');
-    else setActiveTab(section);
+    setActiveTab(section);
   };
 
   return (
@@ -33,7 +17,10 @@ export default function HeaderNav({ activeTab, setActiveTab, user, onLogout, onP
       <header className="vt-header">
         <div className="vt-header-container">
           {/* Left: Viettel Software Logo */}
-          <div className="vt-logo-wrap" onClick={() => handleNavClick(isAdmin ? 'dashboard' : 'schedule')}>
+          <div 
+            className="vt-logo-wrap" 
+            onClick={() => handleNavClick(isAdmin ? 'dashboard' : isEmployee ? 'overtime' : 'schedule')}
+          >
             <img 
               src="/static/images/logo-1-2x-1.png" 
               alt="Viettel Software" 
@@ -49,79 +36,71 @@ export default function HeaderNav({ activeTab, setActiveTab, user, onLogout, onP
             </div>
           </div>
 
-          {/* Center: Sleek Top Navigation Bar */}
+          {/* Center: Top Navigation Bar */}
           <nav className="vt-nav-links">
+            {/* Admin Tabs */}
             {isAdmin && (
               <>
                 <button 
-                  className={`vt-nav-item ${mainActive === 'dashboard' ? 'active' : ''}`}
+                  className={`vt-nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
                   onClick={() => handleNavClick('dashboard')}
                 >
                   <span>Dashboard</span>
                 </button>
 
                 <button 
-                  className={`vt-nav-item ${mainActive === 'employees' ? 'active' : ''}`}
+                  className={`vt-nav-item ${activeTab === 'employees' ? 'active' : ''}`}
                   onClick={() => handleNavClick('employees')}
                 >
                   <span>Nhân sự</span>
                 </button>
 
                 <button 
-                  className={`vt-nav-item ${mainActive === 'interns' ? 'active' : ''}`}
+                  className={`vt-nav-item ${activeTab === 'interns' ? 'active' : ''}`}
                   onClick={() => handleNavClick('interns')}
                 >
                   <span>Thực tập sinh</span>
                 </button>
 
                 <button 
-                  className={`vt-nav-item ${mainActive === 'ai' ? 'active' : ''}`}
-                  onClick={() => handleNavClick('ai')}
+                  className={`vt-nav-item ${['hrai-chat', 'hrai-sheets', 'hrai-db', 'ai'].includes(activeTab) ? 'active' : ''}`}
+                  onClick={() => handleNavClick('hrai-chat')}
                 >
                   <span>AI HR</span>
                 </button>
               </>
             )}
 
+            {/* Employee Tabs: Strictly Profile and Overtime */}
             {isEmployee && (
               <>
                 <button 
-                  className={`vt-nav-item ${mainActive === 'employees' ? 'active' : ''}`}
-                  onClick={() => handleNavClick('employees')}
+                  className={`vt-nav-item ${activeTab === 'profile' ? 'active' : ''}`}
+                  onClick={() => handleNavClick('profile')}
                 >
-                  <span>Quản lý Nhân sự</span>
+                  <span>Hồ sơ cá nhân</span>
                 </button>
+
                 <button 
-                  className={`vt-nav-item ${mainActive === 'overtime' ? 'active' : ''}`}
+                  className={`vt-nav-item ${activeTab === 'overtime' ? 'active' : ''}`}
                   onClick={() => handleNavClick('overtime')}
                 >
                   <span>Chấm công OT</span>
                 </button>
-                <button 
-                  className={`vt-nav-item ${mainActive === 'schedule' ? 'active' : ''}`}
-                  onClick={() => handleNavClick('schedule')}
-                >
-                  <span>Bảng lịch làm việc</span>
-                </button>
-                <button 
-                  className={`vt-nav-item ${mainActive === 'ai' ? 'active' : ''}`}
-                  onClick={() => handleNavClick('ai')}
-                >
-                  <span>Trợ lý AI HR</span>
-                </button>
               </>
             )}
 
+            {/* Intern Tabs */}
             {isIntern && (
               <>
                 <button 
-                  className={`vt-nav-item ${mainActive === 'schedule' ? 'active' : ''}`}
+                  className={`vt-nav-item ${activeTab === 'schedule' ? 'active' : ''}`}
                   onClick={() => handleNavClick('schedule')}
                 >
                   <span>Đăng ký lịch thực tập</span>
                 </button>
                 <button 
-                  className={`vt-nav-item ${mainActive === 'overtime' ? 'active' : ''}`}
+                  className={`vt-nav-item ${activeTab === 'overtime' ? 'active' : ''}`}
                   onClick={() => handleNavClick('overtime')}
                 >
                   <span>Chấm công OT</span>
@@ -130,13 +109,19 @@ export default function HeaderNav({ activeTab, setActiveTab, user, onLogout, onP
             )}
           </nav>
 
-          {/* Right: Direct Profile Click (No Dropdown Popover!) */}
+          {/* Right: Direct Profile / User avatar */}
           <div className="vt-header-actions">
             <div className="vt-user-profile-wrap">
               <div 
                 className="vt-user-profile"
-                onClick={() => setIsProfileOpen(true)}
-                title="Bấm để mở Thông tin cá nhân, Đổi mật khẩu, Cấu hình Google Sheet & Đăng xuất"
+                onClick={() => {
+                  if (isEmployee) {
+                    setActiveTab('profile');
+                  } else {
+                    setIsProfileOpen(true);
+                  }
+                }}
+                title={isEmployee ? "Xem & sửa Hồ sơ cá nhân" : "Bấm để mở Cài đặt tài khoản & Đăng xuất"}
                 style={{ cursor: 'pointer' }}
               >
                 <div className="vt-avatar">
@@ -150,11 +135,21 @@ export default function HeaderNav({ activeTab, setActiveTab, user, onLogout, onP
                 </div>
               </div>
             </div>
+
+            {/* Logout Button */}
+            <button 
+              onClick={onLogout}
+              className="vt-btn-outline-sm"
+              style={{ padding: '6px 12px', fontSize: '0.8rem', borderRadius: 8, cursor: 'pointer', border: '1px solid #E2E8F0', background: '#FFFFFF', color: '#64748B', fontWeight: 600 }}
+              title="Đăng xuất khỏi hệ thống"
+            >
+              Đăng xuất
+            </button>
           </div>
         </div>
       </header>
 
-      {/* Profile & Change Password & Google Sheet Config & Logout Modal */}
+      {/* Profile Modal (For Password / Google Config / Details) */}
       <ProfileModal 
         isOpen={isProfileOpen} 
         onClose={() => setIsProfileOpen(false)} 

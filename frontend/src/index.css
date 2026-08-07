@@ -754,3 +754,49 @@ body {
   background: var(--vt-red);
   box-shadow: 0 4px 10px rgba(238, 0, 51, 0.25);
 }
+
+/* Form inputs and labels */
+.vt-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #1E293B;
+  margin-bottom: 6px;
+}
+
+.vt-input {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #CBD5E1;
+  background: #FFFFFF;
+  color: #1E293B;
+  font-size: 0.9rem;
+  outline: none;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.vt-input:focus {
+  border-color: var(--vt-red);
+  box-shadow: 0 0 0 3px rgba(238, 0, 51, 0.1);
+}
+
+.vt-input:disabled, .vt-input[readonly] {
+  background: #F1F5F9;
+  color: #64748B;
+  cursor: not-allowed;
+}
+
+.vt-cal-day-cell:hover {
+  border-color: #EE0033 !important;
+  box-shadow: 0 4px 14px rgba(238, 0, 51, 0.18) !important;
+  transform: translateY(-2px);
+}
+
+.vt-notif-hover-card:hover {
+  border-color: #2563EB !important;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.12);
+  transform: translateY(-1px);
+}
+

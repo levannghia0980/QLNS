@@ -7,6 +7,7 @@ import EmployeesPage from './pages/EmployeesPage';
 import InternsPage from './pages/InternsPage';
 import OvertimePage from './pages/OvertimePage';
 import SchedulePage from './pages/SchedulePage';
+import ProfilePage from './pages/ProfilePage';
 import AiHrPage from './pages/AiHrPage';
 import LoginPage from './pages/LoginPage';
 
@@ -27,6 +28,13 @@ export default function App() {
         const u = JSON.parse(savedUser);
         axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
         setUser(u);
+        if (u.user_type === 'employee') {
+          setActiveTab('overtime');
+        } else if (u.user_type === 'intern' && u.role !== 'admin') {
+          setActiveTab('schedule');
+        } else {
+          setActiveTab('dashboard');
+        }
       } catch (e) {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
@@ -54,6 +62,14 @@ export default function App() {
     localStorage.setItem('user', JSON.stringify(userData));
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     setUser(userData);
+
+    if (userData.user_type === 'employee') {
+      setActiveTab('overtime');
+    } else if (userData.user_type === 'intern' && userData.role !== 'admin') {
+      setActiveTab('schedule');
+    } else {
+      setActiveTab('dashboard');
+    }
   };
 
   const handleLogout = () => {
@@ -61,6 +77,10 @@ export default function App() {
     localStorage.removeItem('user');
     delete axios.defaults.headers.common['Authorization'];
     setUser(null);
+  };
+
+  const handleProfileUpdated = (updatedData) => {
+    setUser(prev => ({ ...prev, ...updatedData }));
   };
 
   if (loading) {
@@ -83,12 +103,14 @@ export default function App() {
         setActiveTab={setActiveTab} 
         user={user} 
         onLogout={handleLogout} 
+        onProfileUpdated={handleProfileUpdated}
       />
 
       {/* Main Active Page with Error Boundary */}
       <main style={{ flexGrow: 1 }}>
         <ErrorBoundary key={activeTab}>
           {activeTab === 'dashboard' && <DashboardPage onNavigate={setActiveTab} />}
+          {activeTab === 'profile' && <ProfilePage currentUser={user} onProfileUpdated={handleProfileUpdated} />}
           {['employees', 'accounts'].includes(activeTab) && <EmployeesPage />}
           {activeTab === 'interns' && <InternsPage />}
           {activeTab === 'overtime' && <OvertimePage />}

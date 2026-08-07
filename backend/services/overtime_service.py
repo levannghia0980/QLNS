@@ -340,55 +340,112 @@ class OvertimeService:
         last_day = date(y, m, calendar.monthrange(y, m)[1])
         num_days = calendar.monthrange(y, m)[1]
 
+        # Query all OT requests in the month (or for specific project)
         q = db.query(models.OvertimeRequest).join(
             models.User, models.OvertimeRequest.user_id == models.User.id
         ).filter(
             models.OvertimeRequest.work_date >= first_day,
             models.OvertimeRequest.work_date <= last_day,
-            models.OvertimeRequest.status == "Approved",
         )
         if project:
             q = q.filter(models.OvertimeRequest.project.ilike(f"%{project}%"))
 
-        records = q.order_by(models.User.full_name, models.OvertimeRequest.work_date).all()
+        records = q.order_by(models.User.full_name, models.OvertimeRequest.work_date, models.OvertimeRequest.start_time).all()
         factors_order = [1.5, 2.1, 2.0, 2.7, 3.0, 3.9]
         user_map: dict = {}
         user_order: list = []
+
+        day_of_week_names = {
+            0: "Thứ 2",
+            1: "Thứ 3",
+            2: "Thứ 4",
+            3: "Thứ 5",
+            4: "Thứ 6",
+            5: "Thứ 7",
+            6: "Chủ nhật"
+        }
 
         for ot in records:
             uid = ot.user_id
             if uid not in user_map:
                 user_map[uid] = {
                     "user_id": uid,
-                    "employee_code": ot.user.employee_code,
-                    "full_name": ot.user.full_name,
-                    "project": ot.project,
+                    "employee_code": ot.user.employee_code if ot.user else "",
+                    "full_name": ot.user.full_name if ot.user else "",
+                    "project": ot.project or (ot.user.project if ot.user else ""),
                     "days": {},
+                    "detail_records": [],
                     "total_by_factor": {f"{f:.1f}": 0.0 for f in factors_order},
                     "total_raw": 0.0,
                     "total_weighted": 0.0,
+                    "total_raw_hours": 0.0,
+                    "total_weighted_hours": 0.0,
+                    "approved_raw_hours": 0.0,
+                    "approved_weighted_hours": 0.0,
+                    "pending_raw_hours": 0.0,
+                    "pending_weighted_hours": 0.0,
+                    "rejected_raw_hours": 0.0,
+                    "rejected_weighted_hours": 0.0,
+                    "total_count": 0,
+                    "pending_count": 0,
+                    "approved_count": 0,
+                    "rejected_count": 0,
                 }
                 user_order.append(uid)
+
+            dow_idx = ot.work_date.weekday()
+            dow_name = day_of_week_names.get(dow_idx, f"Thứ {dow_idx + 2}")
+
+            record_item = {
+                "ot_id": ot.id,
+                "work_date": ot.work_date.strftime("%Y-%m-%d"),
+                "date_display": ot.work_date.strftime("%d/%m/%Y"),
+                "day_number": ot.work_date.day,
+                "day_of_week": dow_name,
+                "start_time": ot.start_time,
+                "end_time": ot.end_time,
+                "raw_hours": round(float(ot.raw_hours or 0.0), 2),
+                "factor": float(ot.factor or 1.5),
+                "weighted_hours": round(float(ot.weighted_hours or 0.0), 2),
+                "reason": ot.reason or "",
+                "status": ot.status,
+                "reject_reason": ot.reject_reason or "",
+                "is_holiday": float(ot.factor or 0) >= 3.0,
+                "is_weekend": dow_idx in (5, 6),
+            }
 
             day = ot.work_date.day
             if day not in user_map[uid]["days"]:
                 user_map[uid]["days"][day] = []
-            user_map[uid]["days"][day].append({
-                "ot_id": ot.id,
-                "start_time": ot.start_time,
-                "end_time": ot.end_time,
-                "raw_hours": ot.raw_hours,
-                "factor": ot.factor,
-                "weighted_hours": ot.weighted_hours,
-                "reason": ot.reason,
-                "status": ot.status,
-            })
+            user_map[uid]["days"][day].append(record_item)
+            user_map[uid]["detail_records"].append(record_item)
+
             factor_key = f"{float(ot.factor):.1f}"
+            raw = round(float(ot.raw_hours or 0.0), 2)
+            weighted = round(float(ot.weighted_hours or 0.0), 2)
+
+            user_map[uid]["total_count"] += 1
+            user_map[uid]["total_raw"] = round(user_map[uid]["total_raw"] + raw, 2)
+            user_map[uid]["total_weighted"] = round(user_map[uid]["total_weighted"] + weighted, 2)
+            user_map[uid]["total_raw_hours"] = user_map[uid]["total_raw"]
+            user_map[uid]["total_weighted_hours"] = user_map[uid]["total_weighted"]
+
             user_map[uid]["total_by_factor"][factor_key] = round(
-                user_map[uid]["total_by_factor"].get(factor_key, 0.0) + ot.raw_hours, 2
+                user_map[uid]["total_by_factor"].get(factor_key, 0.0) + raw, 2
             )
-            user_map[uid]["total_raw"] = round(user_map[uid]["total_raw"] + ot.raw_hours, 2)
-            user_map[uid]["total_weighted"] = round(user_map[uid]["total_weighted"] + ot.weighted_hours, 2)
+
+            if ot.status == "Approved":
+                user_map[uid]["approved_count"] += 1
+                user_map[uid]["approved_raw_hours"] = round(user_map[uid]["approved_raw_hours"] + raw, 2)
+                user_map[uid]["approved_weighted_hours"] = round(user_map[uid]["approved_weighted_hours"] + weighted, 2)
+            elif ot.status == "Pending":
+                user_map[uid]["pending_count"] += 1
+                user_map[uid]["pending_raw_hours"] = round(user_map[uid]["pending_raw_hours"] + raw, 2)
+                user_map[uid]["pending_weighted_hours"] = round(user_map[uid]["pending_weighted_hours"] + weighted, 2)
+            elif ot.status == "Rejected":
+                user_map[uid]["rejected_count"] += 1
+                user_map[uid]["rejected_raw_hours"] = round(user_map[uid]["rejected_raw_hours"] + raw, 2)
+                user_map[uid]["rejected_weighted_hours"] = round(user_map[uid]["rejected_weighted_hours"] + weighted, 2)
 
         return {
             "month": m,
