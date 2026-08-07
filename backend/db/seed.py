@@ -1,15 +1,14 @@
 """
 Database Seed & Initial Migration Module.
-Ensures essential schema defaults, positions, admin, and initial data exist in the database.
-All runtime operations remain 100% dynamic via SQLAlchemy ORM.
+Clean & Enterprise Standard: Only initializes schema, job positions, and default admin account.
+Zero hardcoded dummy/fake data. All business data is 100% dynamic from SQLite DB.
 """
-from datetime import date, datetime
+from datetime import datetime
 from sqlalchemy.orm import Session
 from .database import SessionLocal, engine, Base
-from .models import Position, User, Account, SchedulePeriod, Schedule
+from .models import Position, User, Account, SchedulePeriod
 import auth
 
-# ─── Positions seed data ──────────────────────────────────────────────────────
 DEFAULT_POSITIONS = [
     {"name": "Trợ lý dự án",  "is_manager": False},
     {"name": "PM",             "is_manager": True},
@@ -27,30 +26,6 @@ DEFAULT_POSITIONS = [
     {"name": "QA",             "is_manager": False},
     {"name": "DA",             "is_manager": False},
     {"name": "AI",             "is_manager": False},
-]
-
-INITIAL_TTS_DATA = [
-    ("TTS1", "Nguyễn Anh Vũ", "Nam", "Dev", "Visa, BTTM", "vuna@viettel.com.vn", "0981112233", "Hà Nội"),
-    ("TTS2", "Đặng Quang Vinh", "Nam", "Dev Mobile", "Tàu cá", "vinhdq@viettel.com.vn", "0982223344", "Hải Phòng"),
-    ("TTS3", "Vũ Văn Hoàng", "Nam", "Tester", "(QP45) CDS05_BTTM", "hoangvv@viettel.com.vn", "0983334455", "Nam Định"),
-    ("TTS4", "Đỗ Thị Ngọc Yến", "Nữ", "BA", "TCS.VCM.QLHĐ", "yennd@viettel.com.vn", "0984445566", "Bắc Ninh"),
-    ("TTS5", "Vũ Anh Đức", "Nam", "Dev", "BU03.VDS.TTDL", "ducva@viettel.com.vn", "0985556677", "Hà Nam"),
-    ("TTS6", "Trần Thị Mai", "Nữ", "Tester", "ViettelPay Pro", "maitt@viettel.com.vn", "0986667788", "Thái Bình"),
-    ("TTS7", "Lê Văn Hùng", "Nam", "DevOps", "Cloud VDS", "hunglv@viettel.com.vn", "0987778899", "Thanh Hóa"),
-    ("TTS8", "Phạm Quốc Bảo", "Nam", "AI", "AI Camera Viettel", "baopq@viettel.com.vn", "0988889900", "Nghệ An"),
-    ("TTS9", "Nguyễn Thu Trang", "Nữ", "BA", "VCS Core Banking", "trangnt@viettel.com.vn", "0989990011", "Hà Nội"),
-    ("TTS10", "Hoàng Minh Tuấn", "Nam", "Dev", "Smart City", "tuanhm@viettel.com.vn", "0971112233", "Quảng Ninh"),
-    ("TTS11", "Đoàn Hải Nam", "Nam", "Dev", "SuperApp MyViettel", "namdh@viettel.com.vn", "0972223344", "Hải Dương"),
-    ("TTS12", "Bùi Lan Hương", "Nữ", "Tester", "Billing BCCS", "huongbl@viettel.com.vn", "0973334455", "Phú Thọ"),
-    ("TTS13", "Dương Văn Khang", "Nam", "Dev Mobile", "Viettel Money iOS", "khangdv@viettel.com.vn", "0974445566", "Vĩnh Phúc"),
-    ("TTS14", "Ngô Đức Trọng", "Nam", "Dev", "VDS Data Lake", "trongnd@viettel.com.vn", "0975556677", "Ninh Bình"),
-    ("TTS15", "Trịnh Thùy Linh", "Nữ", "BA", "Omnichannel", "linhtt@viettel.com.vn", "0976667788", "Hà Nội"),
-    ("TTS16", "Lý Gia Huy", "Nam", "Dev", "Core Switch", "huygl@viettel.com.vn", "0977778899", "Đà Nẵng"),
-    ("TTS17", "Chu Phương Thảo", "Nữ", "Tester", "Microservices Platform", "thaocp@viettel.com.vn", "0978889900", "Huế"),
-    ("TTS18", "Tạ Quang Dũng", "Nam", "DevOps", "Kubernetes Mesh", "dungtq@viettel.com.vn", "0979990011", "TP.HCM"),
-    ("TTS19", "Vương Thúy Nga", "Nữ", "BA", "Payment Gateway", "ngavt@viettel.com.vn", "0961112233", "Cần Thơ"),
-    ("TTS20", "Cao Tiến Đạt", "Nam", "Dev", "Security Gateway", "datct@viettel.com.vn", "0962223344", "Bình Dương"),
-    ("TTS21", "Lương Mỹ Duyên", "Nữ", "Tester", "Fraud Detection AI", "duyenlm@viettel.com.vn", "0963334455", "Hà Nội"),
 ]
 
 
@@ -86,51 +61,7 @@ def init_db_defaults():
             db.add(admin_acc)
             db.commit()
 
-        # 3. Seed Interns if missing
-        for code, name, gender, role, project, email, phone, hometown in INITIAL_TTS_DATA:
-            u = db.query(User).filter(User.employee_code == code).first()
-            if not u:
-                u = User(
-                    employee_code=code,
-                    full_name=name,
-                    role="user",
-                    user_type="intern",
-                    gender=gender,
-                    ethnicity="Kinh",
-                    viettel_email=email,
-                    phone=phone,
-                    hometown=hometown,
-                    bank_name="Viettel Money",
-                    bank_account="0988" + code.replace("TTS", "").zfill(6),
-                    project=project,
-                    position=role,
-                    allowance="Có",
-                    employee_type="TTS Trung tâm",
-                    working_status="Working",
-                    employment_type="Fulltime",
-                    account_status=1,
-                )
-                db.add(u)
-                db.flush()
-
-                acc = Account(
-                    user_id=u.id,
-                    username=code.lower(),
-                    password=auth.hash_password("123456")
-                )
-                db.add(acc)
-            else:
-                u.full_name = name
-                u.gender = gender
-                u.position = role
-                u.project = project
-                u.viettel_email = email
-                u.phone = phone
-                u.hometown = hometown
-                u.user_type = "intern"
-        db.commit()
-
-        # 4. Seed Schedule Periods for months 7..12
+        # 3. Ensure Schedule Periods exist for current year
         for m in [7, 8, 9, 10, 11, 12]:
             p = db.query(SchedulePeriod).filter(
                 SchedulePeriod.month == m,
@@ -148,5 +79,6 @@ def init_db_defaults():
             else:
                 p.status = "open"
         db.commit()
+
     finally:
         db.close()
