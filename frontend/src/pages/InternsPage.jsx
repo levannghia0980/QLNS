@@ -50,6 +50,25 @@ export default function InternsPage() {
   };
   const [formData, setFormData] = useState(initialForm);
 
+  const calcDuration = (joinDateStr) => {
+    if (!joinDateStr) return '—';
+    try {
+      const join = new Date(joinDateStr);
+      if (isNaN(join.getTime())) return '—';
+      const now = new Date();
+      const diffMs = now - join;
+      if (diffMs < 0) return 'Mới vào';
+      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+      const months = Math.floor(diffDays / 30);
+      const days = diffDays % 30;
+      if (months > 0 && days > 0) return `${months} tháng ${days} ngày`;
+      if (months > 0) return `${months} tháng`;
+      return `${days} ngày`;
+    } catch {
+      return '—';
+    }
+  };
+
   useEffect(() => {
     if (subTab === 'interns') fetchInterns();
   }, [subTab]);
@@ -393,76 +412,103 @@ export default function InternsPage() {
             </div>
           </div>
 
-          <table className="vt-table">
-            <thead>
-              <tr>
-                <th>MNV</th>
-                <th>HỌ VÀ TÊN</th>
-                <th>VỊ TRÍ / ROLE</th>
-                <th>DỰ ÁN</th>
-                <th>SỐ ĐIỆN THOẠI</th>
-                <th>QUÊ QUÁN</th>
-                <th>TÌNH TRẠNG</th>
-                <th style={{ textAlign: 'center' }}>THAO TÁC</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
+          <div style={{ overflowX: 'auto' }}>
+            <table className="vt-table" style={{ fontSize: '0.8rem', minWidth: 1200 }}>
+              <thead>
                 <tr>
-                  <td colSpan={8} style={{ textAlign: 'center', padding: 24, color: '#EE0033' }}>
-                    Đang nạp danh sách thực tập sinh...
-                  </td>
+                  <th style={{ textAlign: 'center', width: 45 }}>STT</th>
+                  <th>HỌ VÀ TÊN</th>
+                  <th style={{ textAlign: 'center' }}>VỊ TRÍ / ROLE</th>
+                  <th style={{ textAlign: 'center' }}>GIỚI TÍNH</th>
+                  <th style={{ textAlign: 'center' }}>DÂN TỘC</th>
+                  <th>EMAIL VIETTEL</th>
+                  <th style={{ textAlign: 'center' }}>NGÀY SINH</th>
+                  <th>QUÊ QUÁN</th>
+                  <th>SỐ ĐIỆN THOẠI</th>
+                  <th>SỐ CCCD</th>
+                  <th>SỐ TÀI KHOẢN</th>
+                  <th>DỰ ÁN</th>
+                  <th style={{ textAlign: 'center' }}>NGÀY VÀO</th>
+                  <th style={{ textAlign: 'center' }}>TỔNG TG TT</th>
+                  <th style={{ textAlign: 'center' }}>TRẠNG THÁI</th>
+                  <th style={{ textAlign: 'center', width: 80 }}>THAO TÁC</th>
                 </tr>
-              ) : filtered.length > 0 ? filtered.map((intern) => (
-                <tr 
-                  key={intern.id}
-                  onDoubleClick={() => handleRowDoubleClick(intern)}
-                  style={{ cursor: 'pointer' }}
-                  title="Nhấn đúp chuột để xem chi tiết đầy đủ thông tin thực tập sinh này"
-                >
-                  <td style={{ fontWeight: 700, color: '#EE0033' }}>{intern.employee_code || '—'}</td>
-                  <td style={{ fontWeight: 600, color: '#0F172A' }}>{intern.full_name || '—'}</td>
-                  <td>
-                    <span className="vt-badge vt-badge-primary">{intern.role || 'Intern'}</span>
-                  </td>
-                  <td style={{ color: '#64748B' }}>{intern.project || '—'}</td>
-                  <td>{intern.phone || '—'}</td>
-                  <td>{intern.hometown || '—'}</td>
-                  <td>
-                    <span className={`vt-badge ${intern.working_status === 'Working' ? 'vt-badge-success' : 'vt-badge-warning'}`}>
-                      {intern.working_status || 'Working'}
-                    </span>
-                  </td>
-                  <td style={{ textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
-                    <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
-                      <button 
-                        className="vt-btn-icon" 
-                        title="Chỉnh sửa thông tin"
-                        onClick={(e) => handleOpenEdit(intern, e)}
-                        style={{ color: '#2563EB', cursor: 'pointer', border: 'none', background: 'transparent', padding: 4 }}
-                      >
-                        <Edit size={16} />
-                      </button>
-                      <button 
-                        className="vt-btn-icon text-danger" 
-                        title="Xóa thực tập sinh"
-                        onClick={(e) => handleDelete(intern, e)}
-                        style={{ color: '#EE0033', cursor: 'pointer', border: 'none', background: 'transparent', padding: 4 }}
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              )) : (
-                <tr>
-                  <td colSpan={8} style={{ textAlign: 'center', padding: 24, color: '#94A3B8' }}>
-                    Không tìm thấy thực tập sinh nào
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan={16} style={{ textAlign: 'center', padding: 24, color: '#EE0033' }}>
+                      Đang nạp danh sách thực tập sinh...
+                    </td>
+                  </tr>
+                ) : filtered.length > 0 ? filtered.map((intern, idx) => {
+                  const duration = calcDuration(intern.join_date);
+                  return (
+                    <tr 
+                      key={intern.id || idx}
+                      onDoubleClick={() => handleRowDoubleClick(intern)}
+                      style={{ cursor: 'pointer' }}
+                      title="Nhấn đúp chuột để xem chi tiết đầy đủ thông tin thực tập sinh này"
+                    >
+                      <td style={{ textAlign: 'center', fontWeight: 700, color: '#EE0033' }}>{idx + 1}</td>
+                      <td style={{ fontWeight: 600, color: '#0F172A', whiteSpace: 'nowrap' }}>{intern.full_name || '—'}</td>
+                      <td style={{ textAlign: 'center' }}>
+                        <span className="vt-badge vt-badge-primary" style={{ fontSize: '0.72rem', padding: '2px 6px' }}>{intern.position || intern.role || 'Dev'}</span>
+                      </td>
+                      <td style={{ textAlign: 'center' }}>{intern.gender || 'Nam'}</td>
+                      <td style={{ textAlign: 'center' }}>{intern.ethnicity || 'Kinh'}</td>
+                      <td style={{ color: '#2563EB', fontSize: '0.75rem' }}>{intern.viettel_email || '—'}</td>
+                      <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
+                        {intern.birthday ? new Date(intern.birthday).toLocaleDateString('vi-VN') : '—'}
+                      </td>
+                      <td>{intern.hometown || '—'}</td>
+                      <td style={{ fontFamily: 'monospace', fontWeight: 600, color: '#0F172A' }}>{intern.phone || '—'}</td>
+                      <td style={{ fontFamily: 'monospace', color: '#475569' }}>{intern.cccd || '—'}</td>
+                      <td style={{ fontSize: '0.75rem', color: '#334155' }}>{intern.bank_account || '—'}</td>
+                      <td style={{ color: '#059669', fontWeight: 600 }}>{intern.project || '—'}</td>
+                      <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
+                        {intern.join_date ? new Date(intern.join_date).toLocaleDateString('vi-VN') : '—'}
+                      </td>
+                      <td style={{ textAlign: 'center', fontWeight: 600, color: '#D97706', whiteSpace: 'nowrap' }}>
+                        {duration}
+                      </td>
+                      <td style={{ textAlign: 'center' }}>
+                        <span className={`vt-badge ${intern.employee_type === 'Người mượn' ? 'vt-badge-warning' : 'vt-badge-success'}`} style={{ fontSize: '0.72rem', padding: '2px 6px' }}>
+                          {intern.employee_type || intern.working_status || 'Của công ty'}
+                        </span>
+                      </td>
+                      <td style={{ textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
+                        <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
+                          <button 
+                            className="vt-btn-icon" 
+                            title="Chỉnh sửa thông tin"
+                            onClick={(e) => handleOpenEdit(intern, e)}
+                            style={{ color: '#2563EB', cursor: 'pointer', border: 'none', background: 'transparent', padding: 2 }}
+                          >
+                            <Edit size={15} />
+                          </button>
+                          <button 
+                            className="vt-btn-icon text-danger" 
+                            title="Xóa thực tập sinh"
+                            onClick={(e) => handleDelete(intern, e)}
+                            style={{ color: '#EE0033', cursor: 'pointer', border: 'none', background: 'transparent', padding: 2 }}
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                }) : (
+                  <tr>
+                    <td colSpan={16} style={{ textAlign: 'center', padding: 24, color: '#94A3B8' }}>
+                      Không tìm thấy thực tập sinh nào
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 

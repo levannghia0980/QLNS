@@ -115,9 +115,10 @@ def export_interns_excel_internal(db: Session):
     interns = (
         db.query(models.User)
         .filter(models.User.user_type == "intern")
-        .order_by(models.User.employee_code)
         .all()
     )
+    from services.google_sheets_service import natural_sort_key
+    interns = sorted(interns, key=natural_sort_key)
 
     wb = openpyxl.Workbook()
     ws = wb.active
@@ -138,9 +139,10 @@ def export_interns_excel_internal(db: Session):
     left_align = Alignment(horizontal='left', vertical='center')
 
     headers = [
-        "STT", "Mã NV", "Họ và tên", "Vị trí / Role", "Giới tính",
-        "Email Viettel", "Số điện thoại", "Quê quán", "Ngân hàng",
-        "Số tài khoản", "Dự án", "Trạng thái"
+        "STT", "Họ và tên (*)", "Role / Vị trí", "Giới tính", "Dân tộc", "Email Viettel",
+        "Ngày sinh", "Quê quán", "Số điện thoại (dùng Zalo)", "Số CCCD",
+        "Số tài khoản ngân hàng / Viettel Money", "Dự án tham gia",
+        "Ngày vào làm việc", "Tổng thời gian thực tập", "Trạng thái / Loại TTS", "Ghi chú"
     ]
 
     ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=len(headers))
@@ -156,18 +158,61 @@ def export_interns_excel_internal(db: Session):
         cell.alignment = center_align
         cell.border = thin_border
 
+    from datetime import date
+    today = date.today()
+
     for r_idx, i in enumerate(interns, start=3):
+        # Calculate duration
+        duration_str = "—"
+        if i.join_date:
+            try:
+                diff_days = (today - i.join_date).days
+                if diff_days >= 0:
+                    months = diff_days // 30
+                    days = diff_days % 30
+                    if months > 0 and days > 0:
+                        duration_str = f"{months} tháng {days} ngày"
+                    elif months > 0:
+                        duration_str = f"{months} tháng"
+                    else:
+                        duration_str = f"{days} ngày"
+            except Exception:
+                pass
+
+        bday_str = i.birthday.strftime("%d/%m/%Y") if i.birthday else ""
+        join_str = i.join_date.strftime("%d/%m/%Y") if i.join_date else ""
+
         row_vals = [
-            r_idx - 2, i.employee_code or "", i.full_name or "", i.role or "", i.gender or "",
-            i.viettel_email or "", i.phone or "", i.hometown or "", i.bank_name or "",
-            i.bank_account or "", i.project or "", i.working_status or "Working"
+            r_idx - 2,
+            i.full_name or "",
+            i.position or i.role or "Dev",
+            i.gender or "Nam",
+            i.ethnicity or "Kinh",
+            i.viettel_email or "",
+            bday_str,
+            i.hometown or "",
+            str(i.phone or ""),
+            str(i.cccd or ""),
+            i.bank_account or "",
+            i.project or "—",
+            join_str,
+            duration_str,
+            i.employee_type or i.working_status or "Của công ty",
+            i.allowance or ""
         ]
         for c_idx, val in enumerate(row_vals, start=1):
             cell = ws.cell(row=r_idx, column=c_idx, value=val)
             cell.border = thin_border
-            cell.alignment = center_align if c_idx in (1, 2, 5, 12) else left_align
+            # Explicitly format Phone and CCCD columns as string format '@' to preserve leading zeros
+            if c_idx in (9, 10):
+                cell.number_format = '@'
+                cell.alignment = center_align
+            elif c_idx in (1, 3, 4, 5, 7, 13, 14, 15):
+                cell.alignment = center_align
+            else:
+                cell.alignment = left_align
 
-    col_widths = [6, 12, 22, 16, 10, 25, 14, 16, 16, 18, 18, 12]
+    col_widths = [6, 22, 14, 10, 10, 26, 14, 14, 16, 18, 24, 18, 16, 18, 16, 16]
     for idx, width in enumerate(col_widths, start=1):
         col_letter = openpyxl.utils.get_column_letter(idx)
         ws.column_dimensions[col_letter].width = width

@@ -601,9 +601,10 @@ class GoogleSheetsService:
                     pass
 
             headers = [
-                "Họ và tên (*)", "Mã NV (*)", "Vị trí / Role", "Giới tính", "Email Viettel",
-                "Số điện thoại", "Quê quán", "Ngân hàng", "Số tài khoản", "Dự án tham gia",
-                "Tình trạng"
+                "STT", "Họ và tên (*)", "Role / Vị trí", "Giới tính", "Dân tộc", "Email Viettel",
+                "Ngày sinh", "Quê quán", "Số điện thoại (dùng Zalo)", "Số CCCD",
+                "Số tài khoản ngân hàng / Viettel Money", "Dự án tham gia",
+                "Ngày vào làm việc", "Tổng thời gian thực tập", "Trạng thái / Loại TTS", "Ghi chú"
             ]
             num_cols = len(headers)
             rows_data = []
@@ -613,22 +614,52 @@ class GoogleSheetsService:
             # Row 2: Header
             rows_data.append(headers)
 
-            for i in interns:
+            today = date.today()
+            for idx, i in enumerate(interns, start=1):
+                # Calculate total internship duration
+                duration_str = "—"
+                if i.join_date:
+                    try:
+                        diff_days = (today - i.join_date).days
+                        if diff_days >= 0:
+                            months = diff_days // 30
+                            days = diff_days % 30
+                            if months > 0 and days > 0:
+                                duration_str = f"{months} tháng {days} ngày"
+                            elif months > 0:
+                                duration_str = f"{months} tháng"
+                            else:
+                                duration_str = f"{days} ngày"
+                    except Exception:
+                        pass
+
+                bday_str = i.birthday.strftime("%d/%m/%Y") if i.birthday else ""
+                join_str = i.join_date.strftime("%d/%m/%Y") if i.join_date else ""
+                
+                # Protect leading zero for phone and cccd by prepending single quote for Google Sheets
+                phone_val = f"'{i.phone}" if i.phone and str(i.phone).startswith("0") else (i.phone or "")
+                cccd_val = f"'{i.cccd}" if i.cccd and str(i.cccd).startswith("0") else (i.cccd or "")
+
                 rows_data.append([
+                    idx,
                     i.full_name or "",
-                    i.employee_code or "",
-                    i.role or "TTS",
+                    i.position or i.role or "Dev",
                     i.gender or "Nam",
+                    i.ethnicity or "Kinh",
                     i.viettel_email or "",
-                    i.phone or "",
+                    bday_str,
                     i.hometown or "",
-                    i.bank_name or "",
+                    phone_val,
+                    cccd_val,
                     i.bank_account or "",
                     i.project or "—",
-                    i.working_status or "Working"
+                    join_str,
+                    duration_str,
+                    i.employee_type or i.working_status or "Của công ty",
+                    i.allowance or ""
                 ])
 
-            # 1. Xóa sạch dữ liệu cũ và các cột lịch/tổng cộng thừa từ trước trên toàn bộ Sheet
+            # 1. Clear all old cells in sheet
             try:
                 sheets_service.spreadsheets().values().clear(
                     spreadsheetId=sheet_id,
@@ -637,7 +668,7 @@ class GoogleSheetsService:
             except Exception:
                 pass
 
-            # 2. Ghi đúng 11 cột hồ sơ chi tiết
+            # 2. Write 16 columns of clean profile data
             sheets_service.spreadsheets().values().update(
                 spreadsheetId=sheet_id,
                 range='A1',
@@ -645,15 +676,22 @@ class GoogleSheetsService:
                 body={'values': rows_data}
             ).execute()
 
-            # 3. Định dạng chuẩn giao diện Viettel cho 11 cột hồ sơ
+            # 3. Format with Viettel Corporate Theme
             requests = [
                 {"unmergeCells": {"range": {"sheetId": 0, "startRowIndex": 0, "endRowIndex": 300, "startColumnIndex": 0, "endColumnIndex": 50}}},
                 {"mergeCells": {"range": {"sheetId": 0, "startRowIndex": 0, "endRowIndex": 1, "startColumnIndex": 0, "endColumnIndex": num_cols}, "mergeType": "MERGE_ALL"}},
                 {"repeatCell": {"range": {"sheetId": 0, "startRowIndex": 0, "endRowIndex": 1, "startColumnIndex": 0, "endColumnIndex": num_cols}, "cell": {"userEnteredFormat": {"backgroundColor": {"red": 0.91, "green": 0.94, "blue": 0.99}, "textFormat": {"bold": True, "fontSize": 13, "foregroundColor": {"red": 0.1, "green": 0.2, "blue": 0.5}}, "horizontalAlignment": "CENTER", "verticalAlignment": "MIDDLE"}}, "fields": "userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment)"}},
                 {"repeatCell": {"range": {"sheetId": 0, "startRowIndex": 1, "endRowIndex": 2, "startColumnIndex": 0, "endColumnIndex": num_cols}, "cell": {"userEnteredFormat": {"backgroundColor": {"red": 0.05, "green": 0.18, "blue": 0.35}, "textFormat": {"bold": True, "fontSize": 10, "foregroundColor": {"red": 1.0, "green": 1.0, "blue": 1.0}}, "horizontalAlignment": "CENTER", "verticalAlignment": "MIDDLE"}}, "fields": "userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment)"}},
-                {"updateDimensionProperties": {"range": {"sheetId": 0, "dimension": "COLUMNS", "startIndex": 0, "endIndex": 1}, "properties": {"pixelSize": 180}, "fields": "pixelSize"}},
-                {"updateDimensionProperties": {"range": {"sheetId": 0, "dimension": "COLUMNS", "startIndex": 1, "endIndex": 2}, "properties": {"pixelSize": 100}, "fields": "pixelSize"}},
-                {"updateDimensionProperties": {"range": {"sheetId": 0, "dimension": "COLUMNS", "startIndex": 2, "endIndex": num_cols}, "properties": {"pixelSize": 140}, "fields": "pixelSize"}},
+                # Set specific column widths
+                {"updateDimensionProperties": {"range": {"sheetId": 0, "dimension": "COLUMNS", "startIndex": 0, "endIndex": 1}, "properties": {"pixelSize": 50}, "fields": "pixelSize"}},    # STT
+                {"updateDimensionProperties": {"range": {"sheetId": 0, "dimension": "COLUMNS", "startIndex": 1, "endIndex": 2}, "properties": {"pixelSize": 180}, "fields": "pixelSize"}},   # Họ tên
+                {"updateDimensionProperties": {"range": {"sheetId": 0, "dimension": "COLUMNS", "startIndex": 2, "endIndex": 5}, "properties": {"pixelSize": 90}, "fields": "pixelSize"}},    # Role, Giới tính, Dân tộc
+                {"updateDimensionProperties": {"range": {"sheetId": 0, "dimension": "COLUMNS", "startIndex": 5, "endIndex": 6}, "properties": {"pixelSize": 220}, "fields": "pixelSize"}},   # Email
+                {"updateDimensionProperties": {"range": {"sheetId": 0, "dimension": "COLUMNS", "startIndex": 6, "endIndex": 8}, "properties": {"pixelSize": 110}, "fields": "pixelSize"}},   # Ngày sinh, Quê
+                {"updateDimensionProperties": {"range": {"sheetId": 0, "dimension": "COLUMNS", "startIndex": 8, "endIndex": 10}, "properties": {"pixelSize": 130}, "fields": "pixelSize"}},  # SĐT, CCCD
+                {"updateDimensionProperties": {"range": {"sheetId": 0, "dimension": "COLUMNS", "startIndex": 10, "endIndex": 11}, "properties": {"pixelSize": 200}, "fields": "pixelSize"}}, # Số TK
+                {"updateDimensionProperties": {"range": {"sheetId": 0, "dimension": "COLUMNS", "startIndex": 11, "endIndex": 12}, "properties": {"pixelSize": 160}, "fields": "pixelSize"}}, # Dự án
+                {"updateDimensionProperties": {"range": {"sheetId": 0, "dimension": "COLUMNS", "startIndex": 12, "endIndex": 16}, "properties": {"pixelSize": 140}, "fields": "pixelSize"}}, # Ngày vào, Thời gian TT, Trạng thái, Ghi chú
                 {"updateBorders": {"range": {"sheetId": 0, "startRowIndex": 0, "endRowIndex": len(rows_data), "startColumnIndex": 0, "endColumnIndex": num_cols}, "top": {"style": "SOLID", "color": {"red": 0.8, "green": 0.8, "blue": 0.8}}, "bottom": {"style": "SOLID", "color": {"red": 0.8, "green": 0.8, "blue": 0.8}}, "left": {"style": "SOLID", "color": {"red": 0.8, "green": 0.8, "blue": 0.8}}, "right": {"style": "SOLID", "color": {"red": 0.8, "green": 0.8, "blue": 0.8}}, "innerHorizontal": {"style": "SOLID", "color": {"red": 0.8, "green": 0.8, "blue": 0.8}}, "innerVertical": {"style": "SOLID", "color": {"red": 0.8, "green": 0.8, "blue": 0.8}}}}
             ]
 
@@ -666,86 +704,144 @@ class GoogleSheetsService:
                 "success": True,
                 "sheet_id": sheet_id,
                 "sheet_url": sheet_url,
-                "message": "🎉 Tự động tạo & làm sạch Google Sheet Danh sách Thực tập sinh thành công (Đúng 11 cột thông tin, không chứa cột lịch thừa)!"
+                "message": "🎉 Tự động tạo Google Sheet Chi tiết Thực tập sinh thành công (16 cột chuẩn, tự tính thời gian thực tập và bảo toàn số 0 đầu)!"
             }
         except Exception as e:
             return {"success": False, "message": f"Lỗi tạo Sheet Thực tập sinh: {str(e)}"}
 
     @staticmethod
     def process_import_interns_generic(rows: list, db: Session) -> dict:
-        """Hàm đồng bộ dữ liệu người dùng/thực tập sinh dùng chung từ danh sách dòng ô của Google Sheet"""
-        if not rows:
+        """Hàm đồng bộ 2 chiều dữ liệu TTS từ Google Sheet hoặc Excel vào CSDL SQLite"""
+        if not rows or len(rows) < 2:
             return {"message": "Dữ liệu rỗng", "count": 0}
 
         header_idx = -1
-        code_col = -1
-        name_col = -1
+        col_map = {}
 
         for r_i, r in enumerate(rows[:5]):
             if not r:
                 continue
             r_strs = [str(c).strip().lower() if c is not None else "" for c in r]
             for c_i, h in enumerate(r_strs):
-                if "mã" in h or "code" in h:
-                    code_col = c_i
-                if "tên" in h or "name" in h:
-                    name_col = c_i
-            if code_col != -1 or name_col != -1:
+                if "tên" in h or "name" in h or "họ" in h: col_map["full_name"] = c_i
+                elif "mã" in h or "code" in h or "stt" in h: col_map["code"] = c_i
+                elif "role" in h or "vị trí" in h or "position" in h: col_map["role"] = c_i
+                elif "giới" in h or "gender" in h: col_map["gender"] = c_i
+                elif "dân tộc" in h or "ethnicity" in h: col_map["ethnicity"] = c_i
+                elif "email" in h: col_map["email"] = c_i
+                elif "sinh" in h or "birth" in h: col_map["birthday"] = c_i
+                elif "quê" in h or "hometown" in h: col_map["hometown"] = c_i
+                elif "thoại" in h or "phone" in h or "sđt" in h: col_map["phone"] = c_i
+                elif "cccd" in h or "cmnd" in h: col_map["cccd"] = c_i
+                elif "khoản" in h or "bank" in h or "tk" in h: col_map["bank_account"] = c_i
+                elif "dự án" in h or "project" in h: col_map["project"] = c_i
+                elif "vào" in h or "join" in h: col_map["join_date"] = c_i
+                elif "trạng thái" in h or "loại" in h or "status" in h: col_map["status"] = c_i
+                elif "ghi chú" in h or "note" in h or "allowance" in h: col_map["notes"] = c_i
+
+            if "full_name" in col_map:
                 header_idx = r_i
                 break
 
         if header_idx == -1:
             header_idx = 1
+            col_map = {
+                "full_name": 1, "role": 2, "gender": 3, "ethnicity": 4, "email": 5,
+                "birthday": 6, "hometown": 7, "phone": 8, "cccd": 9, "bank_account": 10,
+                "project": 11, "join_date": 12, "status": 14, "notes": 15
+            }
 
         data_rows = rows[header_idx + 1:]
         count = 0
         from services.hrai.sheet_pipeline import is_summary_row
 
+        def parse_date_val(v):
+            if not v:
+                return None
+            if isinstance(v, date):
+                return v
+            if isinstance(v, datetime):
+                return v.date()
+            v_str = str(v).strip().replace("'", "")
+            for fmt in ("%d/%m/%Y", "%Y-%m-%d", "%d-%m-%Y", "%d/%m/%y"):
+                try:
+                    return datetime.strptime(v_str, fmt).date()
+                except Exception:
+                    pass
+            return None
+
         for r in data_rows:
-            if not r or len(r) <= max(code_col, name_col, 0):
+            if not r:
                 continue
-            
-            full_name = str(r[name_col]).strip() if name_col != -1 and name_col < len(r) and r[name_col] else ""
-            emp_code = str(r[code_col]).strip() if code_col != -1 and code_col < len(r) and r[code_col] else ""
-
-            if not full_name and not emp_code:
-                continue
-            if is_summary_row(r) or emp_code.lower().startswith("tổng") or full_name.lower().startswith("tổng"):
+            name_idx = col_map.get("full_name", 1)
+            full_name = str(r[name_idx]).strip() if name_idx < len(r) and r[name_idx] is not None else ""
+            if not full_name or is_summary_row(r) or full_name.lower().startswith("tổng"):
                 continue
 
-            user = None
-            if emp_code:
-                user = db.query(models.User).filter(models.User.employee_code == emp_code).first()
-            if not user and full_name:
-                user = db.query(models.User).filter(models.User.full_name == full_name).first()
+            # Format phone and cccd to preserve leading zeros
+            raw_phone = str(r[col_map["phone"]]).strip().replace("'", "") if "phone" in col_map and col_map["phone"] < len(r) and r[col_map["phone"]] is not None else ""
+            if raw_phone and raw_phone.isdigit() and len(raw_phone) == 9:
+                raw_phone = "0" + raw_phone
+
+            raw_cccd = str(r[col_map["cccd"]]).strip().replace("'", "") if "cccd" in col_map and col_map["cccd"] < len(r) and r[col_map["cccd"]] is not None else ""
+            if raw_cccd and raw_cccd.isdigit() and len(raw_cccd) in (10, 11):
+                raw_cccd = raw_cccd.zfill(12)
+
+            role_val = str(r[col_map["role"]]).strip() if "role" in col_map and col_map["role"] < len(r) and r[col_map["role"]] else "Dev"
+            gender_val = str(r[col_map["gender"]]).strip() if "gender" in col_map and col_map["gender"] < len(r) and r[col_map["gender"]] else "Nam"
+            ethnicity_val = str(r[col_map["ethnicity"]]).strip() if "ethnicity" in col_map and col_map["ethnicity"] < len(r) and r[col_map["ethnicity"]] else "Kinh"
+            email_val = str(r[col_map["email"]]).strip() if "email" in col_map and col_map["email"] < len(r) and r[col_map["email"]] else ""
+            bday_val = parse_date_val(r[col_map["birthday"]]) if "birthday" in col_map and col_map["birthday"] < len(r) else None
+            hometown_val = str(r[col_map["hometown"]]).strip() if "hometown" in col_map and col_map["hometown"] < len(r) and r[col_map["hometown"]] else ""
+            bank_acc_val = str(r[col_map["bank_account"]]).strip() if "bank_account" in col_map and col_map["bank_account"] < len(r) and r[col_map["bank_account"]] else ""
+            proj_val = str(r[col_map["project"]]).strip() if "project" in col_map and col_map["project"] < len(r) and r[col_map["project"]] else "—"
+            join_date_val = parse_date_val(r[col_map["join_date"]]) if "join_date" in col_map and col_map["join_date"] < len(r) else None
+            status_val = str(r[col_map["status"]]).strip() if "status" in col_map and col_map["status"] < len(r) and r[col_map["status"]] else "Của công ty"
+            notes_val = str(r[col_map["notes"]]).strip() if "notes" in col_map and col_map["notes"] < len(r) and r[col_map["notes"]] else ""
+
+            user = db.query(models.User).filter(
+                models.User.full_name.ilike(full_name.strip()),
+                models.User.user_type == "intern"
+            ).first()
 
             if user:
-                if full_name: user.full_name = full_name
-                if len(r) > 2 and r[2]: user.role = str(r[2]).strip()
-                if len(r) > 3 and r[3]: user.gender = str(r[3]).strip()
-                if len(r) > 4 and r[4]: user.viettel_email = str(r[4]).strip()
-                if len(r) > 5 and r[5]: user.phone = str(r[5]).strip()
-                if len(r) > 6 and r[6]: user.hometown = str(r[6]).strip()
-                if len(r) > 7 and r[7]: user.bank_name = str(r[7]).strip()
-                if len(r) > 8 and r[8]: user.bank_account = str(r[8]).strip()
-                if len(r) > 9 and r[9]: user.project = str(r[9]).strip()
-                if len(r) > 10 and r[10]: user.working_status = str(r[10]).strip()
+                user.full_name = full_name
+                if role_val: user.position = role_val; user.role = role_val
+                if gender_val: user.gender = gender_val
+                if ethnicity_val: user.ethnicity = ethnicity_val
+                if email_val: user.viettel_email = email_val
+                if bday_val: user.birthday = bday_val
+                if hometown_val: user.hometown = hometown_val
+                if raw_phone: user.phone = raw_phone
+                if raw_cccd: user.cccd = raw_cccd
+                if bank_acc_val: user.bank_account = bank_acc_val
+                if proj_val: user.project = proj_val
+                if join_date_val: user.join_date = join_date_val
+                if status_val: user.employee_type = status_val; user.working_status = status_val
+                if notes_val: user.allowance = notes_val
                 count += 1
             else:
+                new_idx = len(db.query(models.User).filter(models.User.user_type == "intern").all()) + 1
                 new_user = models.User(
-                    username=emp_code or f"user_{len(db.query(models.User).all())+1}",
-                    full_name=full_name or emp_code,
-                    employee_code=emp_code,
+                    employee_code=f"TTS{new_idx}",
+                    full_name=full_name,
+                    role=role_val or "Dev",
+                    position=role_val or "Dev",
                     user_type="intern",
-                    role=str(r[2]).strip() if len(r) > 2 and r[2] else "Intern",
-                    gender=str(r[3]).strip() if len(r) > 3 and r[3] else None,
-                    viettel_email=str(r[4]).strip() if len(r) > 4 and r[4] else None,
-                    phone=str(r[5]).strip() if len(r) > 5 and r[5] else None,
-                    hometown=str(r[6]).strip() if len(r) > 6 and r[6] else None,
-                    bank_name=str(r[7]).strip() if len(r) > 7 and r[7] else None,
-                    bank_account=str(r[8]).strip() if len(r) > 8 and r[8] else None,
-                    project=str(r[9]).strip() if len(r) > 9 and r[9] else None,
-                    working_status=str(r[10]).strip() if len(r) > 10 and r[10] else "Working"
+                    gender=gender_val,
+                    ethnicity=ethnicity_val,
+                    viettel_email=email_val,
+                    birthday=bday_val,
+                    hometown=hometown_val,
+                    phone=raw_phone,
+                    cccd=raw_cccd,
+                    bank_account=bank_acc_val,
+                    project=proj_val,
+                    join_date=join_date_val,
+                    employee_type=status_val,
+                    working_status=status_val,
+                    allowance=notes_val,
+                    account_status=1
                 )
                 db.add(new_user)
                 count += 1
