@@ -413,36 +413,28 @@ export default function InternsPage() {
           </div>
 
           <div style={{ overflowX: 'auto' }}>
-            <table className="vt-table" style={{ fontSize: '0.8rem', minWidth: 1200 }}>
+            <table className="vt-table" style={{ fontSize: '0.82rem', minWidth: 900 }}>
               <thead>
                 <tr>
                   <th style={{ textAlign: 'center', width: 45 }}>STT</th>
                   <th>HỌ VÀ TÊN</th>
                   <th style={{ textAlign: 'center' }}>VỊ TRÍ / ROLE</th>
-                  <th style={{ textAlign: 'center' }}>GIỚI TÍNH</th>
-                  <th style={{ textAlign: 'center' }}>DÂN TỘC</th>
-                  <th>EMAIL VIETTEL</th>
-                  <th style={{ textAlign: 'center' }}>NGÀY SINH</th>
-                  <th>QUÊ QUÁN</th>
-                  <th>SỐ ĐIỆN THOẠI</th>
-                  <th>SỐ CCCD</th>
-                  <th>SỐ TÀI KHOẢN</th>
                   <th>DỰ ÁN</th>
-                  <th style={{ textAlign: 'center' }}>NGÀY VÀO</th>
-                  <th style={{ textAlign: 'center' }}>TỔNG TG TT</th>
+                  <th style={{ textAlign: 'center' }}>GIỚI TÍNH</th>
+                  <th style={{ textAlign: 'center' }}>NGÀY SINH</th>
                   <th style={{ textAlign: 'center' }}>TRẠNG THÁI</th>
-                  <th style={{ textAlign: 'center', width: 80 }}>THAO TÁC</th>
+                  <th>GHI CHÚ</th>
+                  <th style={{ textAlign: 'center', width: 110 }}>THAO TÁC</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={16} style={{ textAlign: 'center', padding: 24, color: '#EE0033' }}>
+                    <td colSpan={9} style={{ textAlign: 'center', padding: 24, color: '#EE0033' }}>
                       Đang nạp danh sách thực tập sinh...
                     </td>
                   </tr>
                 ) : filtered.length > 0 ? filtered.map((intern, idx) => {
-                  const duration = calcDuration(intern.join_date);
                   return (
                     <tr 
                       key={intern.id || idx}
@@ -451,49 +443,55 @@ export default function InternsPage() {
                       title="Nhấn đúp chuột để xem chi tiết đầy đủ thông tin thực tập sinh này"
                     >
                       <td style={{ textAlign: 'center', fontWeight: 700, color: '#EE0033' }}>{idx + 1}</td>
-                      <td style={{ fontWeight: 600, color: '#0F172A', whiteSpace: 'nowrap' }}>{intern.full_name || '—'}</td>
-                      <td style={{ textAlign: 'center' }}>
-                        <span className="vt-badge vt-badge-primary" style={{ fontSize: '0.72rem', padding: '2px 6px' }}>{intern.position || intern.role || 'Dev'}</span>
+                      <td style={{ fontWeight: 600, color: '#0F172A', whiteSpace: 'nowrap' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <User size={14} color="#2563EB" />
+                          <span>{intern.full_name || '—'}</span>
+                        </div>
                       </td>
+                      <td style={{ textAlign: 'center' }}>
+                        <span className="vt-badge vt-badge-primary" style={{ fontSize: '0.72rem', padding: '2px 8px' }}>
+                          {intern.position || intern.role || 'Dev'}
+                        </span>
+                      </td>
+                      <td style={{ color: '#059669', fontWeight: 600 }}>{intern.project || '—'}</td>
                       <td style={{ textAlign: 'center' }}>{intern.gender || 'Nam'}</td>
-                      <td style={{ textAlign: 'center' }}>{intern.ethnicity || 'Kinh'}</td>
-                      <td style={{ color: '#2563EB', fontSize: '0.75rem' }}>{intern.viettel_email || '—'}</td>
-                      <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
+                      <td style={{ textAlign: 'center', whiteSpace: 'nowrap', color: '#475569' }}>
                         {intern.birthday ? new Date(intern.birthday).toLocaleDateString('vi-VN') : '—'}
                       </td>
-                      <td>{intern.hometown || '—'}</td>
-                      <td style={{ fontFamily: 'monospace', fontWeight: 600, color: '#0F172A' }}>{intern.phone || '—'}</td>
-                      <td style={{ fontFamily: 'monospace', color: '#475569' }}>{intern.cccd || '—'}</td>
-                      <td style={{ fontSize: '0.75rem', color: '#334155' }}>{intern.bank_account || '—'}</td>
-                      <td style={{ color: '#059669', fontWeight: 600 }}>{intern.project || '—'}</td>
-                      <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
-                        {intern.join_date ? new Date(intern.join_date).toLocaleDateString('vi-VN') : '—'}
-                      </td>
-                      <td style={{ textAlign: 'center', fontWeight: 600, color: '#D97706', whiteSpace: 'nowrap' }}>
-                        {duration}
-                      </td>
                       <td style={{ textAlign: 'center' }}>
-                        <span className={`vt-badge ${intern.employee_type === 'Người mượn' ? 'vt-badge-warning' : 'vt-badge-success'}`} style={{ fontSize: '0.72rem', padding: '2px 6px' }}>
+                        <span className={`vt-badge ${intern.employee_type === 'Người mượn' ? 'vt-badge-warning' : 'vt-badge-success'}`} style={{ fontSize: '0.72rem', padding: '2px 8px' }}>
                           {intern.employee_type || intern.working_status || 'Của công ty'}
                         </span>
+                      </td>
+                      <td style={{ color: '#64748B', fontSize: '0.75rem', maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={intern.allowance || ''}>
+                        {intern.allowance || '—'}
                       </td>
                       <td style={{ textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
                         <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
                           <button 
                             className="vt-btn-icon" 
+                            title="Xem chi tiết đầy đủ từ A-Z"
+                            onClick={() => handleRowDoubleClick(intern)}
+                            style={{ color: '#059669', cursor: 'pointer', border: 'none', background: '#ECFDF5', borderRadius: 4, padding: '3px 6px' }}
+                          >
+                            <Users size={14} />
+                          </button>
+                          <button 
+                            className="vt-btn-icon" 
                             title="Chỉnh sửa thông tin"
                             onClick={(e) => handleOpenEdit(intern, e)}
-                            style={{ color: '#2563EB', cursor: 'pointer', border: 'none', background: 'transparent', padding: 2 }}
+                            style={{ color: '#2563EB', cursor: 'pointer', border: 'none', background: '#EFF6FF', borderRadius: 4, padding: '3px 6px' }}
                           >
-                            <Edit size={15} />
+                            <Edit size={14} />
                           </button>
                           <button 
                             className="vt-btn-icon text-danger" 
                             title="Xóa thực tập sinh"
                             onClick={(e) => handleDelete(intern, e)}
-                            style={{ color: '#EE0033', cursor: 'pointer', border: 'none', background: 'transparent', padding: 2 }}
+                            style={{ color: '#EE0033', cursor: 'pointer', border: 'none', background: '#FEF2F2', borderRadius: 4, padding: '3px 6px' }}
                           >
-                            <Trash2 size={15} />
+                            <Trash2 size={14} />
                           </button>
                         </div>
                       </td>
@@ -501,7 +499,7 @@ export default function InternsPage() {
                   );
                 }) : (
                   <tr>
-                    <td colSpan={16} style={{ textAlign: 'center', padding: 24, color: '#94A3B8' }}>
+                    <td colSpan={9} style={{ textAlign: 'center', padding: 24, color: '#94A3B8' }}>
                       Không tìm thấy thực tập sinh nào
                     </td>
                   </tr>
@@ -515,82 +513,89 @@ export default function InternsPage() {
       {/* Sub-Tab 2: Bảng lịch làm việc */}
       {subTab === 'schedule' && <SchedulePage />}
 
-      {/* MODAL 1: Detail View Modal */}
+      {/* MODAL 1: Detail View Modal (A to Z Information) */}
       {isDetailOpen && selectedIntern && createPortal(
         <div 
           style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(4px)', zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, overflow: 'hidden' }}
           onClick={() => setIsDetailOpen(false)}
         >
           <div 
-            style={{ width: '100%', maxWidth: 640, maxHeight: '85vh', display: 'flex', flexDirection: 'column', background: '#ffffff', borderRadius: 16, boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.4)', overflow: 'hidden', zIndex: 1000000, position: 'relative' }}
+            style={{ width: '100%', maxWidth: 680, maxHeight: '90vh', display: 'flex', flexDirection: 'column', background: '#ffffff', borderRadius: 16, boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.4)', overflow: 'hidden', zIndex: 1000000, position: 'relative' }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div style={{ background: '#EE0033', color: 'white', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+            {/* Modal Header */}
+            <div style={{ background: 'linear-gradient(135deg, #EE0033 0%, #B90025 100%)', color: 'white', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <GraduationCap size={22} />
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0, color: 'white' }}>
-                  Hồ Sơ Chi Tiết Thực Tập Sinh: {selectedIntern.full_name} ({selectedIntern.employee_code})
-                </h3>
+                <div style={{ background: 'rgba(255, 255, 255, 0.2)', padding: 6, borderRadius: 8, display: 'flex' }}>
+                  <User size={20} color="white" />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0, color: 'white' }}>{selectedIntern.full_name}</h3>
+                  <span style={{ fontSize: '0.75rem', opacity: 0.9 }}>Hồ sơ chi tiết Thực tập sinh</span>
+                </div>
               </div>
-              <button onClick={() => setIsDetailOpen(false)} style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}><X size={20} /></button>
+              <button onClick={() => setIsDetailOpen(false)} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white', cursor: 'pointer', borderRadius: 6, padding: 6, display: 'flex' }}><X size={18} /></button>
             </div>
 
-            <div style={{ padding: 24, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, overflowY: 'auto', flex: 1 }}>
-              <div style={{ background: '#F8FAFC', padding: 12, borderRadius: 8, border: '1px solid #E2E8F0' }}>
-                <span style={{ fontSize: '0.75rem', color: '#64748B', display: 'block' }}>Mã Thực Tập Sinh</span>
-                <strong style={{ color: '#EE0033', fontSize: '1rem' }}>{selectedIntern.employee_code || '—'}</strong>
-              </div>
+            {/* Modal Body: Complete A to Z details */}
+            <div style={{ padding: 24, overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
               <div style={{ background: '#F8FAFC', padding: 12, borderRadius: 8, border: '1px solid #E2E8F0' }}>
                 <span style={{ fontSize: '0.75rem', color: '#64748B', display: 'block' }}>Họ và Tên</span>
-                <strong style={{ color: '#0F172A', fontSize: '1rem' }}>{selectedIntern.full_name || '—'}</strong>
+                <strong style={{ fontSize: '0.95rem', color: '#0F172A' }}>{selectedIntern.full_name || '—'}</strong>
               </div>
               <div style={{ background: '#F8FAFC', padding: 12, borderRadius: 8, border: '1px solid #E2E8F0' }}>
-                <span style={{ fontSize: '0.75rem', color: '#64748B', display: 'block' }}>Dự Án Đang Tham Gia</span>
-                <strong style={{ color: '#2563EB' }}>{selectedIntern.project || 'Chưa gán dự án'}</strong>
+                <span style={{ fontSize: '0.75rem', color: '#64748B', display: 'block' }}>Vị trí / Role</span>
+                <span className="vt-badge vt-badge-primary">{selectedIntern.position || selectedIntern.role || 'Dev'}</span>
               </div>
               <div style={{ background: '#F8FAFC', padding: 12, borderRadius: 8, border: '1px solid #E2E8F0' }}>
-                <span style={{ fontSize: '0.75rem', color: '#64748B', display: 'block' }}>Số Điện Thoại</span>
-                <strong>{selectedIntern.phone || '—'}</strong>
+                <span style={{ fontSize: '0.75rem', color: '#64748B', display: 'block' }}>Dự án tham gia</span>
+                <strong style={{ color: '#059669' }}>{selectedIntern.project || '—'}</strong>
               </div>
               <div style={{ background: '#F8FAFC', padding: 12, borderRadius: 8, border: '1px solid #E2E8F0' }}>
-                <span style={{ fontSize: '0.75rem', color: '#64748B', display: 'block' }}>Email Viettel</span>
-                <strong>{selectedIntern.viettel_email || '—'}</strong>
+                <span style={{ fontSize: '0.75rem', color: '#64748B', display: 'block' }}>Trạng thái / Loại TTS</span>
+                <span className={`vt-badge ${selectedIntern.employee_type === 'Người mượn' ? 'vt-badge-warning' : 'vt-badge-success'}`}>
+                  {selectedIntern.employee_type || selectedIntern.working_status || 'Của công ty'}
+                </span>
               </div>
               <div style={{ background: '#F8FAFC', padding: 12, borderRadius: 8, border: '1px solid #E2E8F0' }}>
-                <span style={{ fontSize: '0.75rem', color: '#64748B', display: 'block' }}>Quê Quán</span>
+                <span style={{ fontSize: '0.75rem', color: '#64748B', display: 'block' }}>Giới tính & Dân tộc</span>
+                <strong>{selectedIntern.gender || 'Nam'} • {selectedIntern.ethnicity || 'Kinh'}</strong>
+              </div>
+              <div style={{ background: '#F8FAFC', padding: 12, borderRadius: 8, border: '1px solid #E2E8F0' }}>
+                <span style={{ fontSize: '0.75rem', color: '#64748B', display: 'block' }}>Ngày sinh</span>
+                <strong>{selectedIntern.birthday ? new Date(selectedIntern.birthday).toLocaleDateString('vi-VN') : '—'}</strong>
+              </div>
+              <div style={{ background: '#F8FAFC', padding: 12, borderRadius: 8, border: '1px solid #E2E8F0' }}>
+                <span style={{ fontSize: '0.75rem', color: '#64748B', display: 'block' }}>Quê quán</span>
                 <strong>{selectedIntern.hometown || '—'}</strong>
               </div>
               <div style={{ background: '#F8FAFC', padding: 12, borderRadius: 8, border: '1px solid #E2E8F0' }}>
-                <span style={{ fontSize: '0.75rem', color: '#64748B', display: 'block' }}>Giới Tính / Dân Tộc</span>
-                <strong>{selectedIntern.gender || 'Nam'} / {selectedIntern.ethnicity || 'Kinh'}</strong>
+                <span style={{ fontSize: '0.75rem', color: '#64748B', display: 'block' }}>Email Viettel</span>
+                <strong style={{ color: '#2563EB' }}>{selectedIntern.viettel_email || '—'}</strong>
               </div>
               <div style={{ background: '#F8FAFC', padding: 12, borderRadius: 8, border: '1px solid #E2E8F0' }}>
-                <span style={{ fontSize: '0.75rem', color: '#64748B', display: 'block' }}>Ngày Sinh</span>
-                <strong>{selectedIntern.birthday || '—'}</strong>
+                <span style={{ fontSize: '0.75rem', color: '#64748B', display: 'block' }}>Số điện thoại (dùng Zalo)</span>
+                <strong style={{ fontFamily: 'monospace', color: '#0F172A' }}>{selectedIntern.phone || '—'}</strong>
               </div>
               <div style={{ background: '#F8FAFC', padding: 12, borderRadius: 8, border: '1px solid #E2E8F0' }}>
                 <span style={{ fontSize: '0.75rem', color: '#64748B', display: 'block' }}>Số CCCD / CMND</span>
-                <strong>{selectedIntern.cccd || '—'}</strong>
+                <strong style={{ fontFamily: 'monospace', color: '#475569' }}>{selectedIntern.cccd || '—'}</strong>
+              </div>
+              <div style={{ background: '#F8FAFC', padding: 12, borderRadius: 8, border: '1px solid #E2E8F0', gridColumn: 'span 2' }}>
+                <span style={{ fontSize: '0.75rem', color: '#64748B', display: 'block' }}>Số tài khoản ngân hàng / Viettel Money</span>
+                <strong>{selectedIntern.bank_account || '—'} {selectedIntern.bank_name ? `(${selectedIntern.bank_name})` : ''}</strong>
               </div>
               <div style={{ background: '#F8FAFC', padding: 12, borderRadius: 8, border: '1px solid #E2E8F0' }}>
-                <span style={{ fontSize: '0.75rem', color: '#64748B', display: 'block' }}>Ngân Hàng / STK</span>
-                <strong>{selectedIntern.bank_name || '—'} ({selectedIntern.bank_account || '—'})</strong>
+                <span style={{ fontSize: '0.75rem', color: '#64748B', display: 'block' }}>Ngày vào làm việc</span>
+                <strong>{selectedIntern.join_date ? new Date(selectedIntern.join_date).toLocaleDateString('vi-VN') : '—'}</strong>
               </div>
               <div style={{ background: '#F8FAFC', padding: 12, borderRadius: 8, border: '1px solid #E2E8F0' }}>
-                <span style={{ fontSize: '0.75rem', color: '#64748B', display: 'block' }}>Loại TTS</span>
-                <strong style={{ color: '#2563EB' }}>{selectedIntern.employee_type || 'Của công ty'}</strong>
+                <span style={{ fontSize: '0.75rem', color: '#64748B', display: 'block' }}>Tổng thời gian thực tập</span>
+                <strong style={{ color: '#D97706' }}>{calcDuration(selectedIntern.join_date)}</strong>
               </div>
-              <div style={{ background: '#F8FAFC', padding: 12, borderRadius: 8, border: '1px solid #E2E8F0' }}>
-                <span style={{ fontSize: '0.75rem', color: '#64748B', display: 'block' }}>Phụ Cấp</span>
-                <strong style={{ color: selectedIntern.allowance === 'Có' ? '#059669' : '#64748B' }}>
-                  {selectedIntern.allowance === 'Có' ? 'Có' : 'Không'}
-                </strong>
-              </div>
-              <div style={{ background: '#F8FAFC', padding: 12, borderRadius: 8, border: '1px solid #E2E8F0' }}>
-                <span style={{ fontSize: '0.75rem', color: '#64748B', display: 'block' }}>Trạng Thái Làm Việc</span>
-                <span className={`vt-badge ${selectedIntern.working_status === 'Working' ? 'vt-badge-success' : 'vt-badge-warning'}`}>
-                  {selectedIntern.working_status || 'Working'}
-                </span>
+              <div style={{ background: '#F8FAFC', padding: 12, borderRadius: 8, border: '1px solid #E2E8F0', gridColumn: 'span 2' }}>
+                <span style={{ fontSize: '0.75rem', color: '#64748B', display: 'block' }}>Ghi chú</span>
+                <strong style={{ color: '#334155', fontWeight: 500 }}>{selectedIntern.allowance || 'Không có ghi chú'}</strong>
               </div>
             </div>
 
