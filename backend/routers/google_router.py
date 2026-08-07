@@ -127,8 +127,10 @@ def export_interns_excel_internal(db: Session):
     from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
     title_font = Font(name="Calibri", size=14, bold=True, color="1E3A5F")
     header_font = Font(name="Calibri", size=11, bold=True, color="FFFFFF")
+    data_font = Font(name="Calibri", size=10, bold=False, color="000000")
     header_fill = PatternFill(start_color="1E3A5F", end_color="1E3A5F", fill_type="solid")
     title_fill = PatternFill(start_color="E8F0FE", end_color="E8F0FE", fill_type="solid")
+    data_fill = PatternFill(fill_type=None)
     thin_border = Border(
         left=Side(style='thin', color='CCCCCC'),
         right=Side(style='thin', color='CCCCCC'),
@@ -203,6 +205,8 @@ def export_interns_excel_internal(db: Session):
         ]
         for c_idx, val in enumerate(row_vals, start=1):
             cell = ws.cell(row=r_idx, column=c_idx, value=val)
+            cell.font = data_font
+            cell.fill = data_fill
             cell.border = thin_border
             # Explicitly format Phone and CCCD columns as string format '@' to preserve leading zeros
             if c_idx in (9, 10):

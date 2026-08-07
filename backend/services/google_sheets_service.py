@@ -677,11 +677,15 @@ class GoogleSheetsService:
                 body={'values': rows_data}
             ).execute()
 
-            # 3. Format with Viettel Corporate Theme
+            # 3. Format with Viettel Corporate Theme (Reset all data cells to clean white background and non-bold text)
             requests = [
                 {"unmergeCells": {"range": {"sheetId": 0, "startRowIndex": 0, "endRowIndex": 300, "startColumnIndex": 0, "endColumnIndex": 50}}},
+                # Reset entire sheet background to white and non-bold font
+                {"repeatCell": {"range": {"sheetId": 0, "startRowIndex": 2, "endRowIndex": len(rows_data) + 20, "startColumnIndex": 0, "endColumnIndex": num_cols}, "cell": {"userEnteredFormat": {"backgroundColor": {"red": 1.0, "green": 1.0, "blue": 1.0}, "textFormat": {"bold": False, "fontSize": 10, "foregroundColor": {"red": 0.06, "green": 0.09, "blue": 0.16}}, "verticalAlignment": "MIDDLE"}}, "fields": "userEnteredFormat(backgroundColor,textFormat,verticalAlignment)"}},
+                # Row 0: Title Header
                 {"mergeCells": {"range": {"sheetId": 0, "startRowIndex": 0, "endRowIndex": 1, "startColumnIndex": 0, "endColumnIndex": num_cols}, "mergeType": "MERGE_ALL"}},
                 {"repeatCell": {"range": {"sheetId": 0, "startRowIndex": 0, "endRowIndex": 1, "startColumnIndex": 0, "endColumnIndex": num_cols}, "cell": {"userEnteredFormat": {"backgroundColor": {"red": 0.91, "green": 0.94, "blue": 0.99}, "textFormat": {"bold": True, "fontSize": 13, "foregroundColor": {"red": 0.1, "green": 0.2, "blue": 0.5}}, "horizontalAlignment": "CENTER", "verticalAlignment": "MIDDLE"}}, "fields": "userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment)"}},
+                # Row 1: Column Headers
                 {"repeatCell": {"range": {"sheetId": 0, "startRowIndex": 1, "endRowIndex": 2, "startColumnIndex": 0, "endColumnIndex": num_cols}, "cell": {"userEnteredFormat": {"backgroundColor": {"red": 0.05, "green": 0.18, "blue": 0.35}, "textFormat": {"bold": True, "fontSize": 10, "foregroundColor": {"red": 1.0, "green": 1.0, "blue": 1.0}}, "horizontalAlignment": "CENTER", "verticalAlignment": "MIDDLE"}}, "fields": "userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment)"}},
                 # Set specific column widths
                 {"updateDimensionProperties": {"range": {"sheetId": 0, "dimension": "COLUMNS", "startIndex": 0, "endIndex": 1}, "properties": {"pixelSize": 50}, "fields": "pixelSize"}},    # STT
@@ -695,6 +699,7 @@ class GoogleSheetsService:
                 {"updateDimensionProperties": {"range": {"sheetId": 0, "dimension": "COLUMNS", "startIndex": 12, "endIndex": 14}, "properties": {"pixelSize": 140}, "fields": "pixelSize"}}, # Ngày vào, Thời gian TT
                 {"updateDimensionProperties": {"range": {"sheetId": 0, "dimension": "COLUMNS", "startIndex": 14, "endIndex": 16}, "properties": {"pixelSize": 110}, "fields": "pixelSize"}}, # Phụ cấp, Trạng thái
                 {"updateDimensionProperties": {"range": {"sheetId": 0, "dimension": "COLUMNS", "startIndex": 16, "endIndex": 17}, "properties": {"pixelSize": 200}, "fields": "pixelSize"}}, # Ghi chú
+                # Clean subtle gray borders
                 {"updateBorders": {"range": {"sheetId": 0, "startRowIndex": 0, "endRowIndex": len(rows_data), "startColumnIndex": 0, "endColumnIndex": num_cols}, "top": {"style": "SOLID", "color": {"red": 0.8, "green": 0.8, "blue": 0.8}}, "bottom": {"style": "SOLID", "color": {"red": 0.8, "green": 0.8, "blue": 0.8}}, "left": {"style": "SOLID", "color": {"red": 0.8, "green": 0.8, "blue": 0.8}}, "right": {"style": "SOLID", "color": {"red": 0.8, "green": 0.8, "blue": 0.8}}, "innerHorizontal": {"style": "SOLID", "color": {"red": 0.8, "green": 0.8, "blue": 0.8}}, "innerVertical": {"style": "SOLID", "color": {"red": 0.8, "green": 0.8, "blue": 0.8}}}}
             ]
 
