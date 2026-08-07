@@ -44,6 +44,7 @@ export default function InternsPage() {
     project: '',
     position: 'TTS',
     allowance: 'Không',
+    notes: '',
     employee_type: 'TTS Trung tâm',
     working_status: 'Working',
     employment_type: 'Fulltime'
@@ -275,6 +276,7 @@ export default function InternsPage() {
       project: intern.project || '',
       position: intern.position || 'TTS',
       allowance: intern.allowance || 'Không',
+      notes: intern.notes || '',
       employee_type: intern.employee_type || 'TTS Trung tâm',
       working_status: intern.working_status || 'Working',
       employment_type: intern.employment_type || 'Fulltime'
@@ -301,15 +303,13 @@ export default function InternsPage() {
   // Handle Delete
   const handleDelete = async (intern, e) => {
     if (e) e.stopPropagation();
-    if (!window.confirm(`Bạn có chắc chắn muốn xóa Thực tập sinh "${intern.full_name}" (${intern.employee_code}) khỏi CSDL?`)) {
-      return;
-    }
+    if (!confirm(`Bạn có chắc chắn muốn xóa thực tập sinh "${intern.full_name}" (${intern.employee_code}) khỏi hệ thống?`)) return;
     try {
       const token = localStorage.getItem('token');
       await axios.delete(`/admin/users/${intern.id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      alert('Đã xóa thực tập sinh thành công!');
+      alert('Xóa thực tập sinh thành công!');
       fetchInterns();
     } catch (err) {
       alert('Lỗi xóa thực tập sinh: ' + (err.response?.data?.detail || err.message));
@@ -323,7 +323,7 @@ export default function InternsPage() {
   };
 
   return (
-    <div className="vt-container animate-fade-in">
+    <div className="vt-page-container animate-fade-in">
       {/* Status Notification Toast */}
       {statusMsg && (
         <div style={{ background: '#ECFDF5', color: '#047857', border: '1px solid #A7F3D0', padding: '10px 16px', borderRadius: 8, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8, fontWeight: 600 }}>
@@ -347,13 +347,13 @@ export default function InternsPage() {
       </div>
 
       {/* Internal Sub-Navigation Controls */}
-      <div className="vt-sub-nav-bar">
+      <div className="vt-sub-nav" style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
         <button 
           className={`vt-sub-nav-pill ${subTab === 'interns' ? 'active' : ''}`}
           onClick={() => setSubTab('interns')}
         >
           <GraduationCap size={16} />
-          <span>Danh sách Thực tập sinh ({safeInterns.length})</span>
+          <span>Danh sách TTS ({filtered.length})</span>
         </button>
 
         <button 
@@ -373,7 +373,7 @@ export default function InternsPage() {
               <Search size={15} className="vt-search-icon" />
               <input 
                 type="text" 
-                placeholder="Tìm tên, Mã TTS, Dự án..." 
+                placeholder="Tìm tên, Mã TTS, Dự án, Ghi chú..." 
                 className="vt-search-input"
                 style={{ width: '100%' }}
                 value={searchTerm}
@@ -413,7 +413,7 @@ export default function InternsPage() {
           </div>
 
           <div style={{ overflowX: 'auto' }}>
-            <table className="vt-table" style={{ fontSize: '0.82rem', minWidth: 900 }}>
+            <table className="vt-table" style={{ fontSize: '0.82rem', minWidth: 950 }}>
               <thead>
                 <tr>
                   <th style={{ textAlign: 'center', width: 45 }}>STT</th>
@@ -422,6 +422,7 @@ export default function InternsPage() {
                   <th>DỰ ÁN</th>
                   <th style={{ textAlign: 'center' }}>GIỚI TÍNH</th>
                   <th style={{ textAlign: 'center' }}>NGÀY SINH</th>
+                  <th style={{ textAlign: 'center' }}>PHỤ CẤP</th>
                   <th style={{ textAlign: 'center' }}>TRẠNG THÁI</th>
                   <th>GHI CHÚ</th>
                   <th style={{ textAlign: 'center', width: 110 }}>THAO TÁC</th>
@@ -430,7 +431,7 @@ export default function InternsPage() {
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={9} style={{ textAlign: 'center', padding: 24, color: '#EE0033' }}>
+                    <td colSpan={10} style={{ textAlign: 'center', padding: 24, color: '#EE0033' }}>
                       Đang nạp danh sách thực tập sinh...
                     </td>
                   </tr>
@@ -460,12 +461,17 @@ export default function InternsPage() {
                         {intern.birthday ? new Date(intern.birthday).toLocaleDateString('vi-VN') : '—'}
                       </td>
                       <td style={{ textAlign: 'center' }}>
+                        <span className={`vt-badge ${intern.allowance === 'Có' ? 'vt-badge-success' : 'vt-badge-warning'}`} style={{ fontSize: '0.72rem', padding: '2px 8px' }}>
+                          {intern.allowance === 'Có' ? 'Có' : 'Không'}
+                        </span>
+                      </td>
+                      <td style={{ textAlign: 'center' }}>
                         <span className={`vt-badge ${intern.employee_type === 'Người mượn' ? 'vt-badge-warning' : 'vt-badge-success'}`} style={{ fontSize: '0.72rem', padding: '2px 8px' }}>
                           {intern.employee_type || intern.working_status || 'Của công ty'}
                         </span>
                       </td>
-                      <td style={{ color: '#64748B', fontSize: '0.75rem', maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={intern.allowance || ''}>
-                        {intern.allowance || '—'}
+                      <td style={{ color: '#475569', fontSize: '0.78rem', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={intern.notes || ''}>
+                        {intern.notes || '—'}
                       </td>
                       <td style={{ textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
                         <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
@@ -499,7 +505,7 @@ export default function InternsPage() {
                   );
                 }) : (
                   <tr>
-                    <td colSpan={9} style={{ textAlign: 'center', padding: 24, color: '#94A3B8' }}>
+                    <td colSpan={10} style={{ textAlign: 'center', padding: 24, color: '#94A3B8' }}>
                       Không tìm thấy thực tập sinh nào
                     </td>
                   </tr>
@@ -626,8 +632,8 @@ export default function InternsPage() {
               {/* Box 11: Ghi chú */}
               <div style={{ background: '#F8FAFC', padding: 14, borderRadius: 10, border: '1px solid #E2E8F0', gridColumn: 'span 2' }}>
                 <span style={{ fontSize: '0.72rem', color: '#64748B', display: 'block', fontWeight: 600 }}>Ghi Chú Phụ Trợ</span>
-                <div style={{ marginTop: 4, color: '#475569', fontSize: '0.88rem', fontStyle: selectedIntern.allowance ? 'normal' : 'italic' }}>
-                  {selectedIntern.allowance || 'Không có ghi chú thêm cho thực tập sinh này.'}
+                <div style={{ marginTop: 4, color: '#475569', fontSize: '0.88rem', fontStyle: selectedIntern.notes ? 'normal' : 'italic' }}>
+                  {selectedIntern.notes || 'Không có ghi chú thêm cho thực tập sinh này.'}
                 </div>
               </div>
             </div>
@@ -662,41 +668,40 @@ export default function InternsPage() {
           onClick={() => { setIsAddOpen(false); setIsEditOpen(false); }}
         >
           <div 
-            style={{ width: '100%', maxWidth: 580, maxHeight: '85vh', display: 'flex', flexDirection: 'column', background: '#ffffff', borderRadius: 16, boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.4)', overflow: 'hidden', zIndex: 1000000, position: 'relative' }}
+            style={{ width: '100%', maxWidth: 640, maxHeight: '90vh', display: 'flex', flexDirection: 'column', background: '#ffffff', borderRadius: 16, boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.4)', overflow: 'hidden', zIndex: 1000000, position: 'relative' }}
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ background: '#EE0033', color: 'white', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
               <h3 style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0, color: 'white' }}>
-                {isAddOpen ? 'Thêm Thực Tập Sinh Mới' : `Chỉnh Sửa Thực Tập Sinh: ${formData.full_name}`}
+                {isAddOpen ? 'Thêm Mới Thực Tập Sinh' : 'Chỉnh Sửa Thông Tin Thực Tập Sinh'}
               </h3>
               <button onClick={() => { setIsAddOpen(false); setIsEditOpen(false); }} style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}><X size={20} /></button>
             </div>
 
-            <form onSubmit={isAddOpen ? handleSaveAdd : handleSaveEdit} style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 14, overflowY: 'auto', flex: 1 }}>
+            <form onSubmit={isAddOpen ? handleSaveAdd : handleSaveEdit} style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 14, overflowY: 'auto' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <div>
-                  <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#0F172A', marginBottom: 4, display: 'block' }}>Mã NV (*)</label>
-                  <input 
-                    type="text" 
-                    className="vt-search-input" 
-                    style={{ width: '100%' }} 
-                    placeholder="VD: TTS16"
-                    value={formData.employee_code} 
-                    onChange={e => setFormData({ ...formData, employee_code: e.target.value })} 
-                    required 
-                  />
-                </div>
-
                 <div>
                   <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#0F172A', marginBottom: 4, display: 'block' }}>Họ và Tên (*)</label>
                   <input 
                     type="text" 
+                    required 
                     className="vt-search-input" 
                     style={{ width: '100%' }} 
-                    placeholder="VD: Nguyễn Văn A"
+                    placeholder="Nguyễn Văn A"
                     value={formData.full_name} 
                     onChange={e => setFormData({ ...formData, full_name: e.target.value })} 
-                    required 
+                  />
+                </div>
+
+                <div>
+                  <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#0F172A', marginBottom: 4, display: 'block' }}>Vị Trí / Role</label>
+                  <input 
+                    type="text" 
+                    className="vt-search-input" 
+                    style={{ width: '100%' }} 
+                    placeholder="Dev, BA, AI, Tester..."
+                    value={formData.role} 
+                    onChange={e => setFormData({ ...formData, role: e.target.value, position: e.target.value })} 
                   />
                 </div>
               </div>
@@ -708,52 +713,12 @@ export default function InternsPage() {
                     type="text" 
                     className="vt-search-input" 
                     style={{ width: '100%' }} 
-                    placeholder="VD: Visa, BTTM..."
+                    placeholder="Visa BTTM, Tàu cá..."
                     value={formData.project} 
                     onChange={e => setFormData({ ...formData, project: e.target.value })} 
                   />
                 </div>
 
-                <div>
-                  <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#0F172A', marginBottom: 4, display: 'block' }}>Số Điện Thoại</label>
-                  <input 
-                    type="text" 
-                    className="vt-search-input" 
-                    style={{ width: '100%' }} 
-                    placeholder="0987654321"
-                    value={formData.phone} 
-                    onChange={e => setFormData({ ...formData, phone: e.target.value })} 
-                  />
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <div>
-                  <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#0F172A', marginBottom: 4, display: 'block' }}>Quê Quán</label>
-                  <input 
-                    type="text" 
-                    className="vt-search-input" 
-                    style={{ width: '100%' }} 
-                    placeholder="Hà Nội, Nam Định..."
-                    value={formData.hometown} 
-                    onChange={e => setFormData({ ...formData, hometown: e.target.value })} 
-                  />
-                </div>
-
-                <div>
-                  <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#0F172A', marginBottom: 4, display: 'block' }}>Email Viettel</label>
-                  <input 
-                    type="email" 
-                    className="vt-search-input" 
-                    style={{ width: '100%' }} 
-                    placeholder="anhnv@viettel.com.vn"
-                    value={formData.viettel_email} 
-                    onChange={e => setFormData({ ...formData, viettel_email: e.target.value })} 
-                  />
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
                 <div>
                   <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#0F172A', marginBottom: 4, display: 'block' }}>Giới Tính</label>
                   <select className="vt-search-input" style={{ width: '100%' }} value={formData.gender} onChange={e => setFormData({ ...formData, gender: e.target.value })}>
@@ -761,22 +726,38 @@ export default function InternsPage() {
                     <option value="Nữ">Nữ</option>
                   </select>
                 </div>
+              </div>
 
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
                 <div>
-                  <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#0F172A', marginBottom: 4, display: 'block' }}>Trạng Thái</label>
-                  <select className="vt-search-input" style={{ width: '100%' }} value={formData.working_status} onChange={e => setFormData({ ...formData, working_status: e.target.value })}>
-                    <option value="Working">Working</option>
-                    <option value="Resigned">Resigned</option>
+                  <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#0F172A', marginBottom: 4, display: 'block' }}>Loại TTS</label>
+                  <select className="vt-search-input" style={{ width: '100%' }} value={formData.employee_type} onChange={e => setFormData({ ...formData, employee_type: e.target.value })}>
+                    <option value="Của công ty">Của công ty</option>
+                    <option value="Người mượn">Người mượn</option>
+                    <option value="Tạm nghỉ">Tạm nghỉ</option>
+                    <option value="Đã nghỉ">Đã nghỉ</option>
                   </select>
                 </div>
 
                 <div>
                   <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#0F172A', marginBottom: 4, display: 'block' }}>Phụ Cấp</label>
                   <select className="vt-search-input" style={{ width: '100%' }} value={formData.allowance} onChange={e => setFormData({ ...formData, allowance: e.target.value })}>
-                    <option value="Có">Có</option>
                     <option value="Không">Không</option>
+                    <option value="Có">Có</option>
                   </select>
                 </div>
+              </div>
+
+              <div>
+                <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#0F172A', marginBottom: 4, display: 'block' }}>Ghi Chú Phụ Trợ (Mô tả, ghi chú linh tinh, text giới thiệu...)</label>
+                <input 
+                  type="text" 
+                  className="vt-search-input" 
+                  style={{ width: '100%' }} 
+                  placeholder="Ghi chú thêm thông tin, giới thiệu, mô tả..."
+                  value={formData.notes} 
+                  onChange={e => setFormData({ ...formData, notes: e.target.value })} 
+                />
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 16, flexShrink: 0 }}>

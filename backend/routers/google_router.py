@@ -142,7 +142,7 @@ def export_interns_excel_internal(db: Session):
         "STT", "Họ và tên (*)", "Role / Vị trí", "Giới tính", "Dân tộc", "Email Viettel",
         "Ngày sinh", "Quê quán", "Số điện thoại (dùng Zalo)", "Số CCCD",
         "Số tài khoản ngân hàng / Viettel Money", "Dự án tham gia",
-        "Ngày vào làm việc", "Tổng thời gian thực tập", "Trạng thái / Loại TTS", "Ghi chú"
+        "Ngày vào làm việc", "Tổng thời gian thực tập", "Phụ cấp", "Trạng thái / Loại TTS", "Ghi chú"
     ]
 
     ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=len(headers))
@@ -197,8 +197,9 @@ def export_interns_excel_internal(db: Session):
             i.project or "—",
             join_str,
             duration_str,
+            "Có" if i.allowance == "Có" else "Không",
             i.employee_type or i.working_status or "Của công ty",
-            i.allowance or ""
+            i.notes or ""
         ]
         for c_idx, val in enumerate(row_vals, start=1):
             cell = ws.cell(row=r_idx, column=c_idx, value=val)
@@ -207,12 +208,12 @@ def export_interns_excel_internal(db: Session):
             if c_idx in (9, 10):
                 cell.number_format = '@'
                 cell.alignment = center_align
-            elif c_idx in (1, 3, 4, 5, 7, 13, 14, 15):
+            elif c_idx in (1, 3, 4, 5, 7, 13, 14, 15, 16):
                 cell.alignment = center_align
             else:
                 cell.alignment = left_align
 
-    col_widths = [6, 22, 14, 10, 10, 26, 14, 14, 16, 18, 24, 18, 16, 18, 16, 16]
+    col_widths = [6, 22, 14, 10, 10, 26, 14, 14, 16, 18, 24, 18, 16, 18, 12, 16, 22]
     for idx, width in enumerate(col_widths, start=1):
         col_letter = openpyxl.utils.get_column_letter(idx)
         ws.column_dimensions[col_letter].width = width

@@ -57,6 +57,7 @@ class UserBase(BaseModel):
     position_id: Optional[int] = None
     join_date: Optional[date] = None
     allowance: Optional[str] = "Không"
+    notes: Optional[str] = None
     employee_type: Optional[str] = "TTS Trung tâm"
     working_status: Optional[str] = "Working"
     employment_type: Optional[str] = "Fulltime"
@@ -97,6 +98,7 @@ class UserUpdate(BaseModel):
     position_id: Optional[int] = None
     join_date: Optional[date] = None
     allowance: Optional[str] = None
+    notes: Optional[str] = None
     employee_type: Optional[str] = None
     working_status: Optional[str] = None
     employment_type: Optional[str] = None

@@ -604,7 +604,7 @@ class GoogleSheetsService:
                 "STT", "Họ và tên (*)", "Role / Vị trí", "Giới tính", "Dân tộc", "Email Viettel",
                 "Ngày sinh", "Quê quán", "Số điện thoại (dùng Zalo)", "Số CCCD",
                 "Số tài khoản ngân hàng / Viettel Money", "Dự án tham gia",
-                "Ngày vào làm việc", "Tổng thời gian thực tập", "Trạng thái / Loại TTS", "Ghi chú"
+                "Ngày vào làm việc", "Tổng thời gian thực tập", "Phụ cấp", "Trạng thái / Loại TTS", "Ghi chú"
             ]
             num_cols = len(headers)
             rows_data = []
@@ -655,8 +655,9 @@ class GoogleSheetsService:
                     i.project or "—",
                     join_str,
                     duration_str,
+                    "Có" if i.allowance == "Có" else "Không",
                     i.employee_type or i.working_status or "Của công ty",
-                    i.allowance or ""
+                    i.notes or ""
                 ])
 
             # 1. Clear all old cells in sheet
@@ -668,7 +669,7 @@ class GoogleSheetsService:
             except Exception:
                 pass
 
-            # 2. Write 16 columns of clean profile data
+            # 2. Write 17 columns of clean profile data
             sheets_service.spreadsheets().values().update(
                 spreadsheetId=sheet_id,
                 range='A1',
@@ -691,7 +692,9 @@ class GoogleSheetsService:
                 {"updateDimensionProperties": {"range": {"sheetId": 0, "dimension": "COLUMNS", "startIndex": 8, "endIndex": 10}, "properties": {"pixelSize": 130}, "fields": "pixelSize"}},  # SĐT, CCCD
                 {"updateDimensionProperties": {"range": {"sheetId": 0, "dimension": "COLUMNS", "startIndex": 10, "endIndex": 11}, "properties": {"pixelSize": 200}, "fields": "pixelSize"}}, # Số TK
                 {"updateDimensionProperties": {"range": {"sheetId": 0, "dimension": "COLUMNS", "startIndex": 11, "endIndex": 12}, "properties": {"pixelSize": 160}, "fields": "pixelSize"}}, # Dự án
-                {"updateDimensionProperties": {"range": {"sheetId": 0, "dimension": "COLUMNS", "startIndex": 12, "endIndex": 16}, "properties": {"pixelSize": 140}, "fields": "pixelSize"}}, # Ngày vào, Thời gian TT, Trạng thái, Ghi chú
+                {"updateDimensionProperties": {"range": {"sheetId": 0, "dimension": "COLUMNS", "startIndex": 12, "endIndex": 14}, "properties": {"pixelSize": 140}, "fields": "pixelSize"}}, # Ngày vào, Thời gian TT
+                {"updateDimensionProperties": {"range": {"sheetId": 0, "dimension": "COLUMNS", "startIndex": 14, "endIndex": 16}, "properties": {"pixelSize": 110}, "fields": "pixelSize"}}, # Phụ cấp, Trạng thái
+                {"updateDimensionProperties": {"range": {"sheetId": 0, "dimension": "COLUMNS", "startIndex": 16, "endIndex": 17}, "properties": {"pixelSize": 200}, "fields": "pixelSize"}}, # Ghi chú
                 {"updateBorders": {"range": {"sheetId": 0, "startRowIndex": 0, "endRowIndex": len(rows_data), "startColumnIndex": 0, "endColumnIndex": num_cols}, "top": {"style": "SOLID", "color": {"red": 0.8, "green": 0.8, "blue": 0.8}}, "bottom": {"style": "SOLID", "color": {"red": 0.8, "green": 0.8, "blue": 0.8}}, "left": {"style": "SOLID", "color": {"red": 0.8, "green": 0.8, "blue": 0.8}}, "right": {"style": "SOLID", "color": {"red": 0.8, "green": 0.8, "blue": 0.8}}, "innerHorizontal": {"style": "SOLID", "color": {"red": 0.8, "green": 0.8, "blue": 0.8}}, "innerVertical": {"style": "SOLID", "color": {"red": 0.8, "green": 0.8, "blue": 0.8}}}}
             ]
 
@@ -704,7 +707,7 @@ class GoogleSheetsService:
                 "success": True,
                 "sheet_id": sheet_id,
                 "sheet_url": sheet_url,
-                "message": "🎉 Tự động tạo Google Sheet Chi tiết Thực tập sinh thành công (16 cột chuẩn, tự tính thời gian thực tập và bảo toàn số 0 đầu)!"
+                "message": "🎉 Tự động tạo Google Sheet Chi tiết Thực tập sinh thành công (Đầy đủ trường Phụ cấp và Ghi chú riêng biệt)!"
             }
         except Exception as e:
             return {"success": False, "message": f"Lỗi tạo Sheet Thực tập sinh: {str(e)}"}
@@ -736,8 +739,9 @@ class GoogleSheetsService:
                 elif "khoản" in h or "bank" in h or "tk" in h: col_map["bank_account"] = c_i
                 elif "dự án" in h or "project" in h: col_map["project"] = c_i
                 elif "vào" in h or "join" in h: col_map["join_date"] = c_i
+                elif "phụ cấp" in h or "allowance" in h: col_map["allowance"] = c_i
                 elif "trạng thái" in h or "loại" in h or "status" in h: col_map["status"] = c_i
-                elif "ghi chú" in h or "note" in h or "allowance" in h: col_map["notes"] = c_i
+                elif "ghi chú" in h or "note" in h or "mô tả" in h: col_map["notes"] = c_i
 
             if "full_name" in col_map:
                 header_idx = r_i
@@ -748,7 +752,7 @@ class GoogleSheetsService:
             col_map = {
                 "full_name": 1, "role": 2, "gender": 3, "ethnicity": 4, "email": 5,
                 "birthday": 6, "hometown": 7, "phone": 8, "cccd": 9, "bank_account": 10,
-                "project": 11, "join_date": 12, "status": 14, "notes": 15
+                "project": 11, "join_date": 12, "allowance": 14, "status": 15, "notes": 16
             }
 
         data_rows = rows[header_idx + 1:]
@@ -796,6 +800,10 @@ class GoogleSheetsService:
             bank_acc_val = str(r[col_map["bank_account"]]).strip() if "bank_account" in col_map and col_map["bank_account"] < len(r) and r[col_map["bank_account"]] else ""
             proj_val = str(r[col_map["project"]]).strip() if "project" in col_map and col_map["project"] < len(r) and r[col_map["project"]] else "—"
             join_date_val = parse_date_val(r[col_map["join_date"]]) if "join_date" in col_map and col_map["join_date"] < len(r) else None
+            
+            allowance_raw = str(r[col_map["allowance"]]).strip() if "allowance" in col_map and col_map["allowance"] < len(r) and r[col_map["allowance"]] else "Không"
+            allowance_val = "Có" if "có" in allowance_raw.lower() or "yes" in allowance_raw.lower() else "Không"
+            
             status_val = str(r[col_map["status"]]).strip() if "status" in col_map and col_map["status"] < len(r) and r[col_map["status"]] else "Của công ty"
             notes_val = str(r[col_map["notes"]]).strip() if "notes" in col_map and col_map["notes"] < len(r) and r[col_map["notes"]] else ""
 
@@ -817,8 +825,9 @@ class GoogleSheetsService:
                 if bank_acc_val: user.bank_account = bank_acc_val
                 if proj_val: user.project = proj_val
                 if join_date_val: user.join_date = join_date_val
+                user.allowance = allowance_val
                 if status_val: user.employee_type = status_val; user.working_status = status_val
-                if notes_val: user.allowance = notes_val
+                if notes_val: user.notes = notes_val
                 count += 1
             else:
                 new_idx = len(db.query(models.User).filter(models.User.user_type == "intern").all()) + 1
@@ -838,9 +847,10 @@ class GoogleSheetsService:
                     bank_account=bank_acc_val,
                     project=proj_val,
                     join_date=join_date_val,
+                    allowance=allowance_val,
+                    notes=notes_val,
                     employee_type=status_val,
                     working_status=status_val,
-                    allowance=notes_val,
                     account_status=1
                 )
                 db.add(new_user)

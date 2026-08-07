@@ -37,6 +37,7 @@ class User(Base):
     position_id = Column(Integer, ForeignKey("positions.id"), nullable=True)
     join_date = Column(Date, nullable=True)
     allowance = Column(String, default="Không")
+    notes = Column(Text, nullable=True)
     employee_type = Column(String, default="TTS Trung tâm")
     working_status = Column(String, default="Working")
     employment_type = Column(String, default="Fulltime")
