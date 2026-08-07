@@ -413,25 +413,23 @@ export default function InternsPage() {
           </div>
 
           <div style={{ overflowX: 'auto' }}>
-            <table className="vt-table" style={{ fontSize: '0.82rem', minWidth: 950 }}>
+            <table className="vt-table" style={{ fontSize: '0.85rem', width: '100%' }}>
               <thead>
                 <tr>
-                  <th style={{ textAlign: 'center', width: 45 }}>STT</th>
+                  <th style={{ textAlign: 'center', width: 50 }}>STT</th>
                   <th>HỌ VÀ TÊN</th>
                   <th style={{ textAlign: 'center' }}>VỊ TRÍ / ROLE</th>
                   <th>DỰ ÁN</th>
-                  <th style={{ textAlign: 'center' }}>GIỚI TÍNH</th>
-                  <th style={{ textAlign: 'center' }}>NGÀY SINH</th>
+                  <th style={{ textAlign: 'center' }}>THỜI GIAN TT</th>
                   <th style={{ textAlign: 'center' }}>PHỤ CẤP</th>
-                  <th style={{ textAlign: 'center' }}>TRẠNG THÁI</th>
-                  <th>GHI CHÚ</th>
+                  <th style={{ textAlign: 'center' }}>STATUS</th>
                   <th style={{ textAlign: 'center', width: 110 }}>THAO TÁC</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={10} style={{ textAlign: 'center', padding: 24, color: '#EE0033' }}>
+                    <td colSpan={8} style={{ textAlign: 'center', padding: 24, color: '#EE0033' }}>
                       Đang nạp danh sách thực tập sinh...
                     </td>
                   </tr>
@@ -445,33 +443,31 @@ export default function InternsPage() {
                     >
                       <td style={{ textAlign: 'center', fontWeight: 700, color: '#EE0033' }}>{idx + 1}</td>
                       <td style={{ fontWeight: 600, color: '#0F172A', whiteSpace: 'nowrap' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <User size={14} color="#2563EB" />
-                          <span>{intern.full_name || '—'}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <div style={{ background: '#EFF6FF', padding: 5, borderRadius: 6, display: 'flex' }}>
+                            <User size={14} color="#2563EB" />
+                          </div>
+                          <span style={{ fontSize: '0.88rem' }}>{intern.full_name || '—'}</span>
                         </div>
                       </td>
                       <td style={{ textAlign: 'center' }}>
-                        <span className="vt-badge vt-badge-primary" style={{ fontSize: '0.72rem', padding: '2px 8px' }}>
+                        <span className="vt-badge vt-badge-primary" style={{ fontSize: '0.74rem', padding: '3px 10px' }}>
                           {intern.position || intern.role || 'Dev'}
                         </span>
                       </td>
-                      <td style={{ color: '#059669', fontWeight: 600 }}>{intern.project || '—'}</td>
-                      <td style={{ textAlign: 'center' }}>{intern.gender || 'Nam'}</td>
-                      <td style={{ textAlign: 'center', whiteSpace: 'nowrap', color: '#475569' }}>
-                        {intern.birthday ? new Date(intern.birthday).toLocaleDateString('vi-VN') : '—'}
+                      <td style={{ color: '#059669', fontWeight: 600, fontSize: '0.86rem' }}>{intern.project || '—'}</td>
+                      <td style={{ textAlign: 'center', fontWeight: 700, color: '#D97706', whiteSpace: 'nowrap' }}>
+                        {calcDuration(intern.join_date)}
                       </td>
                       <td style={{ textAlign: 'center' }}>
-                        <span className={`vt-badge ${intern.allowance === 'Có' ? 'vt-badge-success' : 'vt-badge-warning'}`} style={{ fontSize: '0.72rem', padding: '2px 8px' }}>
+                        <span className={`vt-badge ${intern.allowance === 'Có' ? 'vt-badge-success' : 'vt-badge-warning'}`} style={{ fontSize: '0.74rem', padding: '3px 10px' }}>
                           {intern.allowance === 'Có' ? 'Có' : 'Không'}
                         </span>
                       </td>
                       <td style={{ textAlign: 'center' }}>
-                        <span className={`vt-badge ${intern.employee_type === 'Người mượn' ? 'vt-badge-warning' : 'vt-badge-success'}`} style={{ fontSize: '0.72rem', padding: '2px 8px' }}>
-                          {intern.employee_type || intern.working_status || 'Của công ty'}
+                        <span className={`vt-badge ${intern.working_status === 'Working' ? 'vt-badge-success' : 'vt-badge-danger'}`} style={{ fontSize: '0.74rem', padding: '3px 10px' }}>
+                          {intern.working_status || 'Working'}
                         </span>
-                      </td>
-                      <td style={{ color: '#475569', fontSize: '0.78rem', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={intern.notes || ''}>
-                        {intern.notes || '—'}
                       </td>
                       <td style={{ textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
                         <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
@@ -479,25 +475,25 @@ export default function InternsPage() {
                             className="vt-btn-icon" 
                             title="Xem chi tiết đầy đủ từ A-Z"
                             onClick={() => handleRowDoubleClick(intern)}
-                            style={{ color: '#059669', cursor: 'pointer', border: 'none', background: '#ECFDF5', borderRadius: 4, padding: '3px 6px' }}
+                            style={{ color: '#059669', cursor: 'pointer', border: 'none', background: '#ECFDF5', borderRadius: 6, padding: '5px 8px' }}
                           >
-                            <Users size={14} />
+                            <Users size={15} />
                           </button>
                           <button 
                             className="vt-btn-icon" 
                             title="Chỉnh sửa thông tin"
                             onClick={(e) => handleOpenEdit(intern, e)}
-                            style={{ color: '#2563EB', cursor: 'pointer', border: 'none', background: '#EFF6FF', borderRadius: 4, padding: '3px 6px' }}
+                            style={{ color: '#2563EB', cursor: 'pointer', border: 'none', background: '#EFF6FF', borderRadius: 6, padding: '5px 8px' }}
                           >
-                            <Edit size={14} />
+                            <Edit size={15} />
                           </button>
                           <button 
                             className="vt-btn-icon text-danger" 
                             title="Xóa thực tập sinh"
                             onClick={(e) => handleDelete(intern, e)}
-                            style={{ color: '#EE0033', cursor: 'pointer', border: 'none', background: '#FEF2F2', borderRadius: 4, padding: '3px 6px' }}
+                            style={{ color: '#EE0033', cursor: 'pointer', border: 'none', background: '#FEF2F2', borderRadius: 6, padding: '5px 8px' }}
                           >
-                            <Trash2 size={14} />
+                            <Trash2 size={15} />
                           </button>
                         </div>
                       </td>
@@ -505,7 +501,7 @@ export default function InternsPage() {
                   );
                 }) : (
                   <tr>
-                    <td colSpan={10} style={{ textAlign: 'center', padding: 24, color: '#94A3B8' }}>
+                    <td colSpan={8} style={{ textAlign: 'center', padding: 24, color: '#94A3B8' }}>
                       Không tìm thấy thực tập sinh nào
                     </td>
                   </tr>
